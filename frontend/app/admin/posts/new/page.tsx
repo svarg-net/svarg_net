@@ -3,14 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { Value } from "platejs";
 import { createPost } from "@/lib/api";
 import { getToken, isAuthenticated } from "@/lib/auth";
+import PlateEditor from "@/components/PlateEditor";
+
+const initialValue: Value = [
+  {
+    type: "p",
+    children: [{ text: "" }],
+  },
+];
 
 export default function NewPostPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [contentMd, setContentMd] = useState("");
+  const [content, setContent] = useState<Value>(initialValue);
   const [status, setStatus] = useState("draft");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +45,7 @@ export default function NewPostPage() {
       await createPost(token, {
         title,
         excerpt,
-        content_md: contentMd,
+        content_json: content,
         status,
       });
       router.push("/admin/posts");
@@ -83,13 +92,10 @@ export default function NewPostPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="content">Контент (Markdown)</label>
-          <textarea
-            id="content"
-            value={contentMd}
-            onChange={(e) => setContentMd(e.target.value)}
-            required
-            placeholder="# Заголовок&#10;&#10;Текст поста в формате Markdown..."
+          <label>Контент</label>
+          <PlateEditor
+            initialValue={content}
+            onChange={setContent}
           />
         </div>
 

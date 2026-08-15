@@ -114,9 +114,20 @@ func (s *postService) validateCreateRequest(req *model.PostCreateRequest) error 
 	if req.Title == "" {
 		return fmt.Errorf("title is required")
 	}
-	if req.ContentMD == "" {
-		return fmt.Errorf("content_md is required")
+
+	// Проверяем что есть хотя бы один тип контента (markdown или JSON)
+	hasContent := false
+	if req.ContentMD != "" {
+		hasContent = true
 	}
+	if req.ContentJSON != nil && len(*req.ContentJSON) > 0 && string(*req.ContentJSON) != "null" {
+		hasContent = true
+	}
+
+	if !hasContent {
+		return fmt.Errorf("content_md or content_json is required")
+	}
+
 	if req.Status == "" {
 		req.Status = model.PostStatusDraft
 	}

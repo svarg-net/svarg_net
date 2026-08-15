@@ -35,9 +35,9 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 	slug := generateSlug(req.Title)
 
 	query := `
-		INSERT INTO posts (author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, now(), now())
-		RETURNING id, author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at
+		INSERT INTO posts (author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
+		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
 	`
 
 	var post model.Post
@@ -49,10 +49,11 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 	}
 
 	err := r.pool.QueryRow(ctx, query,
-		authorID, slug, req.Title, req.Excerpt, req.ContentMD, req.Status, publishedAt,
+		authorID, slug, req.Title, req.Excerpt, req.ContentMD, req.ContentJSON, req.Status, publishedAt,
 	).Scan(
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
-		&post.ContentMD, &post.Status, &post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
+		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
+		&post.CreatedAt, &post.UpdatedAt,
 	)
 
 	if err != nil {
@@ -64,7 +65,7 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 
 func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, error) {
 	query := `
-		SELECT id, author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at
+		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
 		FROM posts
 		WHERE id = $1
 	`
@@ -72,7 +73,8 @@ func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, er
 	var post model.Post
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
-		&post.ContentMD, &post.Status, &post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
+		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
+		&post.CreatedAt, &post.UpdatedAt,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -87,7 +89,7 @@ func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, er
 
 func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Post, error) {
 	query := `
-		SELECT id, author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at
+		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
 		FROM posts
 		WHERE slug = $1
 	`
@@ -95,7 +97,8 @@ func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Pos
 	var post model.Post
 	err := r.pool.QueryRow(ctx, query, slug).Scan(
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
-		&post.ContentMD, &post.Status, &post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
+		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
+		&post.CreatedAt, &post.UpdatedAt,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -123,7 +126,7 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 
 	if status != "" {
 		query = `
-			SELECT id, author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at
+			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
 			FROM posts
 			WHERE status = $1
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
@@ -132,7 +135,7 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 		args = append(args, status, perPage, offset)
 	} else {
 		query = `
-			SELECT id, author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at
+			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
 			FROM posts
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
 			LIMIT $1 OFFSET $2
@@ -151,15 +154,17 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 		var post model.Post
 		err := rows.Scan(
 			&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
-			&post.ContentMD, &post.Status, &post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
+			&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
+			&post.CreatedAt, &post.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
 		posts = append(posts, post)
 	}
-
-	// Получаем общее количество
+	if posts == nil {
+		posts = []model.Post{}
+	}
 	var countQuery string
 	var countArgs []interface{}
 
@@ -207,12 +212,17 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		argIndex++
 	}
 
+	if req.ContentJSON != nil {
+		setParts = append(setParts, fmt.Sprintf("content_json = $%d", argIndex))
+		args = append(args, *req.ContentJSON)
+		argIndex++
+	}
+
 	if req.Status != nil {
 		setParts = append(setParts, fmt.Sprintf("status = $%d", argIndex))
 		args = append(args, *req.Status)
 		argIndex++
 
-		// Если публикуем, устанавливаем published_at
 		if *req.Status == model.PostStatusPublished {
 			setParts = append(setParts, fmt.Sprintf("published_at = COALESCE(published_at, $%d)", argIndex))
 			args = append(args, time.Now())
@@ -230,7 +240,7 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		UPDATE posts
 		SET %s
 		WHERE id = $%d
-		RETURNING id, author_id, slug, title, excerpt, content_md, status, published_at, created_at, updated_at
+		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
 	`, strings.Join(setParts, ", "), argIndex)
 
 	args = append(args, id)
@@ -238,7 +248,8 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 	var post model.Post
 	err := r.pool.QueryRow(ctx, query, args...).Scan(
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
-		&post.ContentMD, &post.Status, &post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
+		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
+		&post.CreatedAt, &post.UpdatedAt,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -265,10 +276,8 @@ func (r *postRepository) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// generateSlug создаёт slug из заголовка (упрощённая версия)
 func generateSlug(title string) string {
 	slug := strings.ToLower(title)
 	slug = strings.ReplaceAll(slug, " ", "-")
-	// Добавляем timestamp для уникальности
 	return fmt.Sprintf("%s-%d", slug, time.Now().Unix())
 }

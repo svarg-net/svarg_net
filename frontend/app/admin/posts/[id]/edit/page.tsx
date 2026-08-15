@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
+import type { Value } from "platejs";
 import { getPosts, updatePost, type Post } from "@/lib/api";
 import { getToken, isAuthenticated } from "@/lib/auth";
+import PlateEditor from "@/components/PlateEditor";
+
+const emptyContent: Value = [
+  {
+    type: "p",
+    children: [{ text: "" }],
+  },
+];
 
 export default function EditPostPage() {
   const router = useRouter();
@@ -14,7 +23,7 @@ export default function EditPostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [contentMd, setContentMd] = useState("");
+  const [content, setContent] = useState<Value>(emptyContent);
   const [status, setStatus] = useState("draft");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -31,7 +40,6 @@ export default function EditPostPage() {
 
   const loadPost = async () => {
     try {
-      // Получаем все посты и ищем по id
       const response = await getPosts("", 1, 100);
       const found = response.items.find((p) => p.id === postId);
 
@@ -43,7 +51,7 @@ export default function EditPostPage() {
       setPost(found);
       setTitle(found.title);
       setExcerpt(found.excerpt || "");
-      setContentMd(found.content_md);
+      setContent((found.content_json as Value) || emptyContent);
       setStatus(found.status);
     } catch (err) {
       setError((err as Error).message);
@@ -68,7 +76,7 @@ export default function EditPostPage() {
       await updatePost(token, postId, {
         title,
         excerpt,
-        content_md: contentMd,
+        content_json: content,
         status,
       });
       router.push("/admin/posts");
@@ -121,12 +129,10 @@ export default function EditPostPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="content">Контент (Markdown)</label>
-          <textarea
-            id="content"
-            value={contentMd}
-            onChange={(e) => setContentMd(e.target.value)}
-            required
+          <label>Контент</label>
+          <PlateEditor
+            initialValue={content}
+            onChange={setContent}
           />
         </div>
 

@@ -4,7 +4,8 @@ export type Post = {
   slug: string;
   title: string;
   excerpt?: string;
-  content_md: string;
+  content_md?: string;
+  content_json?: any[];
   status: string;
   published_at?: string;
   created_at: string;
@@ -65,7 +66,15 @@ export async function getPosts(
     throw new Error(`Failed to fetch posts: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  
+  // Гарантируем что items всегда массив
+  return {
+    items: data.items || [],
+    total: data.total || 0,
+    page: data.page || page,
+    per_page: data.per_page || perPage,
+  };
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
@@ -97,10 +106,15 @@ export async function getPostById(id: number): Promise<Post | null> {
   const data: PostListResponse = await response.json();
   return data.items.find((p) => p.id === id) || null;
 }
-
 export async function createPost(
   token: string,
-  data: { title: string; excerpt?: string; content_md: string; status: string }
+  data: {
+    title: string;
+    excerpt?: string;
+    content_md?: string;
+    content_json?: any[];
+    status: string;
+  }
 ): Promise<Post> {
   const response = await fetch(`${getApiUrl()}/api/v1/posts`, {
     method: "POST",
@@ -122,7 +136,13 @@ export async function createPost(
 export async function updatePost(
   token: string,
   id: number,
-  data: { title?: string; excerpt?: string; content_md?: string; status?: string }
+  data: {
+    title?: string;
+    excerpt?: string;
+    content_md?: string;
+    content_json?: any[];
+    status?: string;
+  }
 ): Promise<Post> {
   const response = await fetch(`${getApiUrl()}/api/v1/posts/${id}`, {
     method: "PATCH",
