@@ -29,6 +29,12 @@ export default function EditPostPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Мета-информация
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
+  const [ogImage, setOgImage] = useState("");
+
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/admin/login");
@@ -53,6 +59,10 @@ export default function EditPostPage() {
       setExcerpt(found.excerpt || "");
       setContent((found.content_json as Value) || emptyContent);
       setStatus(found.status);
+      setMetaTitle(found.meta_title || "");
+      setMetaDescription(found.meta_description || "");
+      setMetaKeywords((found.meta_keywords || []).join(", "));
+      setOgImage(found.og_image || "");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -78,6 +88,13 @@ export default function EditPostPage() {
         excerpt,
         content_json: content,
         status,
+        meta_title: metaTitle,
+        meta_description: metaDescription,
+        meta_keywords: metaKeywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0),
+        og_image: ogImage,
       });
       router.push("/admin/posts");
     } catch (err) {
@@ -148,6 +165,62 @@ export default function EditPostPage() {
             <option value="archived">Архив</option>
           </select>
         </div>
+
+        {/* Секция мета-информации */}
+        <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
+          <legend style={{ fontWeight: "bold", padding: "0 10px" }}>SEO / Мета-информация</legend>
+
+          <div className="form-group">
+            <label htmlFor="metaTitle">Meta Title</label>
+            <input
+              id="metaTitle"
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder={title || "Заголовок для SEO"}
+            />
+            <small style={{ color: "#666" }}>
+              {metaTitle.length}/60 символов
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="metaDescription">Meta Description</label>
+            <textarea
+              id="metaDescription"
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              rows={3}
+              placeholder={excerpt || "Описание для SEO"}
+              style={{ minHeight: "80px" }}
+            />
+            <small style={{ color: "#666" }}>
+              {metaDescription.length}/160 символов
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="metaKeywords">Meta Keywords (через запятую)</label>
+            <input
+              id="metaKeywords"
+              type="text"
+              value={metaKeywords}
+              onChange={(e) => setMetaKeywords(e.target.value)}
+              placeholder="Go, Golang, Next.js"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="ogImage">OG Image URL</label>
+            <input
+              id="ogImage"
+              type="url"
+              value={ogImage}
+              onChange={(e) => setOgImage(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+        </fieldset>
 
         <div className="form-actions">
           <button

@@ -35,9 +35,13 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 	slug := generateSlug(req.Title)
 
 	query := `
-		INSERT INTO posts (author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
-		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
+		INSERT INTO posts (
+			author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+			meta_title, meta_description, meta_keywords, og_image
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now(), $9, $10, $11, $12)
+		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
 	`
 
 	var post model.Post
@@ -50,10 +54,12 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 
 	err := r.pool.QueryRow(ctx, query,
 		authorID, slug, req.Title, req.Excerpt, req.ContentMD, req.ContentJSON, req.Status, publishedAt,
+		req.MetaTitle, req.MetaDescription, req.MetaKeywords, req.OGImage,
 	).Scan(
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
+		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
 	)
 
 	if err != nil {
@@ -65,7 +71,8 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 
 func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, error) {
 	query := `
-		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
+		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
 		FROM posts
 		WHERE id = $1
 	`
@@ -75,6 +82,7 @@ func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, er
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
+		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -89,7 +97,8 @@ func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, er
 
 func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Post, error) {
 	query := `
-		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
+		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
 		FROM posts
 		WHERE slug = $1
 	`
@@ -99,6 +108,7 @@ func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Pos
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
+		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -126,7 +136,8 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 
 	if status != "" {
 		query = `
-			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
+			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
 			FROM posts
 			WHERE status = $1
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
@@ -135,7 +146,8 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 		args = append(args, status, perPage, offset)
 	} else {
 		query = `
-			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
+			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
 			FROM posts
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
 			LIMIT $1 OFFSET $2
@@ -156,15 +168,18 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 			&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
 			&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 			&post.CreatedAt, &post.UpdatedAt,
+			&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
 		posts = append(posts, post)
 	}
+
 	if posts == nil {
 		posts = []model.Post{}
 	}
+
 	var countQuery string
 	var countArgs []interface{}
 
@@ -230,6 +245,31 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		}
 	}
 
+	// Мета-информация
+	if req.MetaTitle != nil {
+		setParts = append(setParts, fmt.Sprintf("meta_title = $%d", argIndex))
+		args = append(args, *req.MetaTitle)
+		argIndex++
+	}
+
+	if req.MetaDescription != nil {
+		setParts = append(setParts, fmt.Sprintf("meta_description = $%d", argIndex))
+		args = append(args, *req.MetaDescription)
+		argIndex++
+	}
+
+	if req.MetaKeywords != nil {
+		setParts = append(setParts, fmt.Sprintf("meta_keywords = $%d", argIndex))
+		args = append(args, *req.MetaKeywords)
+		argIndex++
+	}
+
+	if req.OGImage != nil {
+		setParts = append(setParts, fmt.Sprintf("og_image = $%d", argIndex))
+		args = append(args, *req.OGImage)
+		argIndex++
+	}
+
 	if len(setParts) == 0 {
 		return r.GetByID(ctx, id)
 	}
@@ -240,7 +280,8 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		UPDATE posts
 		SET %s
 		WHERE id = $%d
-		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at
+		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
 	`, strings.Join(setParts, ", "), argIndex)
 
 	args = append(args, id)
@@ -250,6 +291,7 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
+		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
 	)
 
 	if err == pgx.ErrNoRows {

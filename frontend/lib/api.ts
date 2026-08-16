@@ -10,6 +10,11 @@ export type Post = {
   published_at?: string;
   created_at: string;
   updated_at: string;
+  // Мета-информация
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string[];
+  og_image?: string;
 };
 
 export type PostListResponse = {
@@ -114,6 +119,10 @@ export async function createPost(
     content_md?: string;
     content_json?: any[];
     status: string;
+    meta_title?: string;
+    meta_description?: string;
+    meta_keywords?: string[];
+    og_image?: string;
   }
 ): Promise<Post> {
   const response = await fetch(`${getApiUrl()}/api/v1/posts`, {
@@ -137,11 +146,15 @@ export async function updatePost(
   token: string,
   id: number,
   data: {
-    title?: string;
+    title: string;
     excerpt?: string;
     content_md?: string;
     content_json?: any[];
-    status?: string;
+    status: string;
+    meta_title?: string;
+    meta_description?: string;
+    meta_keywords?: string[];
+    og_image?: string;
   }
 ): Promise<Post> {
   const response = await fetch(`${getApiUrl()}/api/v1/posts/${id}`, {

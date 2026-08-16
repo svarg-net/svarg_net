@@ -18,6 +18,36 @@ function formatDate(dateString: string): string {
   });
 }
 
+function WebsiteJsonLd() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "SVARG_NET",
+    url: "https://svarg.net",
+    description: "Технический блог о Go, Next.js, PostgreSQL и современной веб-разработке",
+    publisher: {
+      "@type": "Organization",
+      name: "SVARG_NET",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://svarg.net/logo.png",
+      },
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://svarg.net/search?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
 export default async function HomePage() {
   let posts: Post[] = [];
   let error: string | null = null;
@@ -31,39 +61,44 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="container">
-      <h1>SVARG_NET</h1>
+    <>
+      <WebsiteJsonLd />
+      <div className="container">
+        <h1>SVARG_NET</h1>
 
-      {error && (
-        <div className="error-state">
-          <p>Не удалось загрузить статьи: {error}</p>
-        </div>
-      )}
+        {error && (
+          <div className="error-state">
+            <p>Не удалось загрузить статьи: {error}</p>
+          </div>
+        )}
 
-      {!error && posts.length === 0 && (
-        <div className="empty-state">
-          <p>Пока нет опубликованных статей</p>
-          <p>
-            <Link href="/admin/login">Войти в админку</Link> и создать первую статью
-          </p>
-        </div>
-      )}
+        {!error && posts.length === 0 && (
+          <div className="empty-state">
+            <p>Пока нет опубликованных статей</p>
+            <p>
+              <Link href="/admin/login">Войти в админку</Link> и создать первую статью
+            </p>
+          </div>
+        )}
 
-      {!error && posts.length > 0 && (
-        <div className="post-list">
-          {posts.map((post) => (
-            <article key={post.id} className="post-card">
-              <Link href={`/posts/${post.slug}`}>
-                <h2>{post.title}</h2>
-                {post.excerpt && <p className="excerpt">{post.excerpt}</p>}
-                <div className="meta">
-                  {post.published_at && formatDate(post.published_at)}
-                </div>
-              </Link>
-            </article>
-          ))}
-        </div>
-      )}
-    </div>
+        {!error && posts.length > 0 && (
+          <div className="post-list">
+            {posts.map((post) => (
+              <article key={post.id} className="post-card">
+                <Link href={`/posts/${post.slug}`}>
+                  <h2>{post.title}</h2>
+                  {post.excerpt && <p className="excerpt">{post.excerpt}</p>}
+                  <div className="meta">
+                    <time dateTime={post.published_at || post.created_at}>
+                      {formatDate(post.published_at || post.created_at)}
+                    </time>
+                  </div>
+                </Link>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

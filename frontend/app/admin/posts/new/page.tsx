@@ -24,6 +24,12 @@ export default function NewPostPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Мета-информация
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
+  const [ogImage, setOgImage] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -47,6 +53,13 @@ export default function NewPostPage() {
         excerpt,
         content_json: content,
         status,
+        meta_title: metaTitle || title,
+        meta_description: metaDescription || excerpt,
+        meta_keywords: metaKeywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0),
+        og_image: ogImage,
       });
       router.push("/admin/posts");
     } catch (err) {
@@ -111,6 +124,65 @@ export default function NewPostPage() {
             <option value="archived">Архив</option>
           </select>
         </div>
+
+        {/* Секция мета-информации */}
+        <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
+          <legend style={{ fontWeight: "bold", padding: "0 10px" }}>SEO / Мета-информация</legend>
+
+          <div className="form-group">
+            <label htmlFor="metaTitle">Meta Title (заголовок для поисковиков)</label>
+            <input
+              id="metaTitle"
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder={title || "Заголовок для SEO (оставьте пустым чтобы использовать основной)"}
+            />
+            <small style={{ color: "#666" }}>
+              {metaTitle.length}/60 символов. Если пусто, будет использован основной заголовок.
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="metaDescription">Meta Description (описание для поисковиков)</label>
+            <textarea
+              id="metaDescription"
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              rows={3}
+              placeholder={excerpt || "Описание для SEO (оставьте пустым чтобы использовать excerpt)"}
+              style={{ minHeight: "80px" }}
+            />
+            <small style={{ color: "#666" }}>
+              {metaDescription.length}/160 символов. Если пусто, будет использован excerpt.
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="metaKeywords">Meta Keywords (ключевые слова через запятую)</label>
+            <input
+              id="metaKeywords"
+              type="text"
+              value={metaKeywords}
+              onChange={(e) => setMetaKeywords(e.target.value)}
+              placeholder="Go, Golang, Next.js, PostgreSQL"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="ogImage">OG Image URL (изображение для соцсетей)</label>
+            <input
+              id="ogImage"
+              type="url"
+              value={ogImage}
+              onChange={(e) => setOgImage(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+            <small style={{ color: "#666" }}>
+              Рекомендуемый размер: 1200x630px. Если пусто, будет использовано изображение по умолчанию.
+            </small>
+          </div>
+        </fieldset>
 
         <div className="form-actions">
           <button
