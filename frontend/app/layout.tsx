@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import "./globals.css";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://svarg.net"), // Замени на свой домен
+  metadataBase: new URL("https://svarg.net"),
   title: {
     default: "SVARG_NET — блог о технологиях",
     template: "%s | SVARG_NET",
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
     description: "Технический блог о Go, Next.js, PostgreSQL и современной веб-разработке",
     images: [
       {
-        url: "/og-image.png", // Создадим позже
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "SVARG_NET",
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
     title: "SVARG_NET — блог о технологиях",
     description: "Технический блог о Go, Next.js, PostgreSQL и современной веб-разработке",
     images: ["/og-image.png"],
-    creator: "@svarg_net", // Замени на свой Twitter
+    creator: "@svarg_net",
   },
   alternates: {
     canonical: "https://svarg.net",
@@ -68,7 +70,17 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body>{children}</body>
+      <body>
+        <div className="site-layout">
+          {/* Sidebar */}
+          <Sidebar />
+
+          {/* Main Content */}
+          <main className="main-content">
+            {children}
+          </main>
+        </div>
+      </body>
     </html>
   );
 }

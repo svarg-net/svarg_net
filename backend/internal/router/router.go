@@ -15,19 +15,25 @@ import (
 // New создаёт и настраивает HTTP роутер
 func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger) http.Handler {
 	// Создаём зависимости
-	postRepo := repository.NewPostRepository(pool)
 	userRepo := repository.NewUserRepository(pool)
+	categoryRepo := repository.NewCategoryRepository(pool)
+	tagRepo := repository.NewTagRepository(pool)
+	postRepo := repository.NewPostRepository(pool, tagRepo)
 
-	postService := service.NewPostService(postRepo, log)
+	postService := service.NewPostService(postRepo, tagRepo, log)
 	authService := service.NewAuthService(userRepo, cfg.JWT, log)
+	categoryService := service.NewCategoryService(categoryRepo, log)
+	tagService := service.NewTagService(tagRepo, log)
 
-	postHandler := handler.NewPostHandler(postService, log)
+	postHandler := handler.NewPostHandler(postService, categoryService, tagService, log)
 	authHandler := handler.NewAuthHandler(authService, log)
+	categoryHandler := handler.NewCategoryHandler(categoryService, log)
+	tagHandler := handler.NewTagHandler(tagService, log)
 
 	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
-	registerRoutes(mux, pool, log, postHandler, authHandler, authService)
+	registerRoutes(mux, pool, log, postHandler, authHandler, categoryHandler, tagHandler, authService)
 
 	// Применяем middleware
 	var handler http.Handler = mux
@@ -44,6 +50,8 @@ func registerRoutes(
 	log logger.Logger,
 	postHandler *handler.PostHandler,
 	authHandler *handler.AuthHandler,
+	categoryHandler *handler.CategoryHandler,
+	tagHandler *handler.TagHandler,
 	authService service.AuthService,
 ) {
 	// Health check
@@ -52,12 +60,27 @@ func registerRoutes(
 	// Auth
 	mux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
 
+	// Публичные маршруты
+	mux.HandleFunc("GET /api/v1/posts", postHandler.ListPosts)
+	mux.HandleFunc("GET /api/v1/posts/{slug}", postHandler.GetPost)
+	mux.HandleFunc("GET /api/v1/categories", categoryHandler.ListCategories)
+	mux.HandleFunc("GET /api/v1/categories/{slug}", categoryHandler.GetCategory)
+	mux.HandleFunc("GET /api/v1/categories/{slug}/posts", postHandler.ListPostsByCategory)
+	mux.HandleFunc("GET /api/v1/tags", tagHandler.ListTags)
+	mux.HandleFunc("GET /api/v1/tags/{slug}", tagHandler.GetTag)
+	mux.HandleFunc("GET /api/v1/tags/{slug}/posts", postHandler.ListPostsByTag)
 	// Защищённые маршруты (требуют авторизации)
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("GET /api/v1/auth/me", authHandler.GetMe)
 	protectedMux.HandleFunc("POST /api/v1/posts", postHandler.CreatePost)
 	protectedMux.HandleFunc("PATCH /api/v1/posts/{id}", postHandler.UpdatePost)
 	protectedMux.HandleFunc("DELETE /api/v1/posts/{id}", postHandler.DeletePost)
+	protectedMux.HandleFunc("POST /api/v1/categories", categoryHandler.CreateCategory)
+	protectedMux.HandleFunc("PATCH /api/v1/categories/{id}", categoryHandler.UpdateCategory)
+	protectedMux.HandleFunc("DELETE /api/v1/categories/{id}", categoryHandler.DeleteCategory)
+	protectedMux.HandleFunc("POST /api/v1/tags", tagHandler.CreateTag)
+	protectedMux.HandleFunc("PATCH /api/v1/tags/{id}", tagHandler.UpdateTag)
+	protectedMux.HandleFunc("DELETE /api/v1/tags/{id}", tagHandler.DeleteTag)
 
 	// Применяем auth middleware к защищённым маршрутам
 	var protectedHandler http.Handler = protectedMux
@@ -68,8 +91,10 @@ func registerRoutes(
 	mux.Handle("POST /api/v1/posts", protectedHandler)
 	mux.Handle("PATCH /api/v1/posts/{id}", protectedHandler)
 	mux.Handle("DELETE /api/v1/posts/{id}", protectedHandler)
-
-	// Публичные маршруты
-	mux.HandleFunc("GET /api/v1/posts", postHandler.ListPosts)
-	mux.HandleFunc("GET /api/v1/posts/{slug}", postHandler.GetPost)
+	mux.Handle("POST /api/v1/categories", protectedHandler)
+	mux.Handle("PATCH /api/v1/categories/{id}", protectedHandler)
+	mux.Handle("DELETE /api/v1/categories/{id}", protectedHandler)
+	mux.Handle("PATCH /api/v1/tags/{id}", protectedHandler)
+	mux.Handle("POST /api/v1/tags", protectedHandler)
+	mux.Handle("DELETE /api/v1/tags/{id}", protectedHandler)
 }

@@ -92,6 +92,11 @@ export default async function HomePage() {
                     <time dateTime={post.published_at || post.created_at}>
                       {formatDate(post.published_at || post.created_at)}
                     </time>
+                    {post.tags && post.tags.length > 0 && (
+                      <span style={{ marginLeft: "15px" }}>
+                        {post.tags.map((tag) => `#${tag.name}`).join(" ")}
+                      </span>
+                    )}
                   </div>
                 </Link>
               </article>

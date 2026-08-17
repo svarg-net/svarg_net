@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import type { Value } from "platejs";
-import { getPosts, updatePost, type Post } from "@/lib/api";
+import {
+  getPosts,
+  updatePost,
+  getCategories,
+  getTags,
+  createCategory,
+  createTag,
+  type Post,
+  type Category,
+  type Tag,
+} from "@/lib/api";
 import { getToken, isAuthenticated } from "@/lib/auth";
 import PlateEditor from "@/components/PlateEditor";
 
@@ -28,6 +38,14 @@ export default function EditPostPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Категория и теги
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number>(0);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newTagName, setNewTagName] = useState("");
 
   // Мета-информация
   const [metaTitle, setMetaTitle] = useState("");
@@ -59,6 +77,8 @@ export default function EditPostPage() {
       setExcerpt(found.excerpt || "");
       setContent((found.content_json as Value) || emptyContent);
       setStatus(found.status);
+      setSelectedCategory(found.category_id || 0);
+      setSelectedTags((found.tags || []).map((t) => t.id));
       setMetaTitle(found.meta_title || "");
       setMetaDescription(found.meta_description || "");
       setMetaKeywords((found.meta_keywords || []).join(", "));
@@ -67,6 +87,46 @@ export default function EditPostPage() {
       setError((err as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const newCategory = await createCategory(token, { name: newCategoryName.trim() });
+      setCategories([...categories, newCategory]);
+      setSelectedCategory(newCategory.id);
+      setNewCategoryName("");
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  };
+
+  const handleAddTag = async () => {
+    if (!newTagName.trim()) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const newTag = await createTag(token, { name: newTagName.trim() });
+      setTags([...tags, newTag]);
+      setSelectedTags([...selectedTags, newTag.id]);
+      setNewTagName("");
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  };
+
+  const toggleTag = (tagId: number) => {
+    if (selectedTags.includes(tagId)) {
+      setSelectedTags(selectedTags.filter((id) => id !== tagId));
+    } else {
+      setSelectedTags([...selectedTags, tagId]);
     }
   };
 
@@ -88,6 +148,8 @@ export default function EditPostPage() {
         excerpt,
         content_json: content,
         status,
+        category_id: selectedCategory > 0 ? selectedCategory : undefined,
+        tag_ids: selectedTags,
         meta_title: metaTitle,
         meta_description: metaDescription,
         meta_keywords: metaKeywords
@@ -152,6 +214,89 @@ export default function EditPostPage() {
             onChange={setContent}
           />
         </div>
+
+        {/* Категория и теги */}
+        <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
+          <legend style={{ fontWeight: "bold", padding: "0 10px" }}>Категория и теги</legend>
+
+          <div className="form-group">
+            <label htmlFor="category">Категория</label>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <select
+                id="category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(Number(e.target.value))}
+                style={{ flex: 1 }}
+              >
+                <option value={0}>Без категории</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Новая категория"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="btn btn-secondary"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Теги</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+              {tags.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => toggleTag(tag.id)}
+                  style={{
+                    padding: "5px 12px",
+                    border: selectedTags.includes(tag.id) ? "2px solid #0066cc" : "1px solid #ddd",
+                    borderRadius: "16px",
+                    background: selectedTags.includes(tag.id) ? "#e6f0ff" : "white",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <input
+                type="text"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                placeholder="Новый тег"
+                style={{ flex: 1 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="btn btn-secondary"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </fieldset>
 
         <div className="form-group">
           <label htmlFor="status">Статус</label>

@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Value } from "platejs";
-import { createPost } from "@/lib/api";
+import {
+  createPost,
+  getCategories,
+  getTags,
+  createCategory,
+  createTag,
+  type Category,
+  type Tag,
+} from "@/lib/api";
 import { getToken, isAuthenticated } from "@/lib/auth";
 import PlateEditor from "@/components/PlateEditor";
 
@@ -24,11 +32,80 @@ export default function NewPostPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Категория и теги
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number>(0);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+
   // Мета-информация
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [metaKeywords, setMetaKeywords] = useState("");
   const [ogImage, setOgImage] = useState("");
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push("/admin/login");
+      return;
+    }
+    loadCategoriesAndTags();
+  }, [router]);
+
+  const loadCategoriesAndTags = async () => {
+    try {
+      const [catResponse, tagResponse] = await Promise.all([
+        getCategories(),
+        getTags(),
+      ]);
+      setCategories(catResponse.items || []);
+      setTags(tagResponse.items || []);
+    } catch (err) {
+      console.error("Failed to load categories/tags:", err);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const newCategory = await createCategory(token, { name: newCategoryName.trim() });
+      setCategories([...categories, newCategory]);
+      setSelectedCategory(newCategory.id);
+      setNewCategoryName("");
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  };
+
+  const handleAddTag = async () => {
+    if (!newTagName.trim()) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const newTag = await createTag(token, { name: newTagName.trim() });
+      setTags([...tags, newTag]);
+      setSelectedTags([...selectedTags, newTag.id]);
+      setNewTagName("");
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  };
+
+  const toggleTag = (tagId: number) => {
+    if (selectedTags.includes(tagId)) {
+      setSelectedTags(selectedTags.filter((id) => id !== tagId));
+    } else {
+      setSelectedTags([...selectedTags, tagId]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +130,8 @@ export default function NewPostPage() {
         excerpt,
         content_json: content,
         status,
+        category_id: selectedCategory > 0 ? selectedCategory : undefined,
+        tag_ids: selectedTags.length > 0 ? selectedTags : undefined,
         meta_title: metaTitle || title,
         meta_description: metaDescription || excerpt,
         meta_keywords: metaKeywords
@@ -112,6 +191,89 @@ export default function NewPostPage() {
           />
         </div>
 
+        {/* Категория и теги */}
+        <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
+          <legend style={{ fontWeight: "bold", padding: "0 10px" }}>Категория и теги</legend>
+
+          <div className="form-group">
+            <label htmlFor="category">Категория</label>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <select
+                id="category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(Number(e.target.value))}
+                style={{ flex: 1 }}
+              >
+                <option value={0}>Без категории</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Новая категория"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="btn btn-secondary"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Теги</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+              {tags.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => toggleTag(tag.id)}
+                  style={{
+                    padding: "5px 12px",
+                    border: selectedTags.includes(tag.id) ? "2px solid #0066cc" : "1px solid #ddd",
+                    borderRadius: "16px",
+                    background: selectedTags.includes(tag.id) ? "#e6f0ff" : "white",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <input
+                type="text"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                placeholder="Новый тег"
+                style={{ flex: 1 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="btn btn-secondary"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </fieldset>
+
         <div className="form-group">
           <label htmlFor="status">Статус</label>
           <select
@@ -130,47 +292,47 @@ export default function NewPostPage() {
           <legend style={{ fontWeight: "bold", padding: "0 10px" }}>SEO / Мета-информация</legend>
 
           <div className="form-group">
-            <label htmlFor="metaTitle">Meta Title (заголовок для поисковиков)</label>
+            <label htmlFor="metaTitle">Meta Title</label>
             <input
               id="metaTitle"
               type="text"
               value={metaTitle}
               onChange={(e) => setMetaTitle(e.target.value)}
-              placeholder={title || "Заголовок для SEO (оставьте пустым чтобы использовать основной)"}
+              placeholder={title || "Заголовок для SEO"}
             />
             <small style={{ color: "#666" }}>
-              {metaTitle.length}/60 символов. Если пусто, будет использован основной заголовок.
+              {metaTitle.length}/60 символов
             </small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="metaDescription">Meta Description (описание для поисковиков)</label>
+            <label htmlFor="metaDescription">Meta Description</label>
             <textarea
               id="metaDescription"
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               rows={3}
-              placeholder={excerpt || "Описание для SEO (оставьте пустым чтобы использовать excerpt)"}
+              placeholder={excerpt || "Описание для SEO"}
               style={{ minHeight: "80px" }}
             />
             <small style={{ color: "#666" }}>
-              {metaDescription.length}/160 символов. Если пусто, будет использован excerpt.
+              {metaDescription.length}/160 символов
             </small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="metaKeywords">Meta Keywords (ключевые слова через запятую)</label>
+            <label htmlFor="metaKeywords">Meta Keywords (через запятую)</label>
             <input
               id="metaKeywords"
               type="text"
               value={metaKeywords}
               onChange={(e) => setMetaKeywords(e.target.value)}
-              placeholder="Go, Golang, Next.js, PostgreSQL"
+              placeholder="Go, Golang, Next.js"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="ogImage">OG Image URL (изображение для соцсетей)</label>
+            <label htmlFor="ogImage">OG Image URL</label>
             <input
               id="ogImage"
               type="url"
@@ -178,9 +340,6 @@ export default function NewPostPage() {
               onChange={(e) => setOgImage(e.target.value)}
               placeholder="https://example.com/image.jpg"
             />
-            <small style={{ color: "#666" }}>
-              Рекомендуемый размер: 1200x630px. Если пусто, будет использовано изображение по умолчанию.
-            </small>
           </div>
         </fieldset>
 

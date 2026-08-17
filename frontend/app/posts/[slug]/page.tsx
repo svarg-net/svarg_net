@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPostBySlug } from "@/lib/api";
 import PlateRenderer from "@/components/PlateRenderer";
+import { getPostBySlug, getCategories, getTags, type Category, type Tag } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +129,22 @@ export default async function PostPage({ params }: Props) {
     notFound();
   }
 
+  // Получаем категории и теги для отображения
+  let categories: Category[] = [];
+  let allTags: Tag[] = [];
+  try {
+    const [catResponse, tagResponse] = await Promise.all([
+      getCategories(),
+      getTags(),
+    ]);
+    categories = catResponse.items || [];
+    allTags = tagResponse.items || [];
+  } catch (err) {
+    console.error("Failed to load categories/tags:", err);
+  }
+
+  const postCategory = categories.find((c) => c.id === post.category_id);
+
   return (
     <>
       <ArticleJsonLd post={post} />
@@ -144,7 +160,35 @@ export default async function PostPage({ params }: Props) {
               <time dateTime={post.published_at || post.created_at}>
                 {formatDate(post.published_at || post.created_at)}
               </time>
+              {postCategory && (
+                <span style={{ marginLeft: "15px" }}>
+                  Категория:{" "}
+                  <Link href={`/categories/${postCategory.slug}`}>
+                    {postCategory.name}
+                  </Link>
+                </span>
+              )}
             </div>
+            {post.tags && post.tags.length > 0 && (
+              <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+                {post.tags.map((tag) => (
+                  <Link
+                    key={tag.id}
+                    href={`/tags/${tag.slug}`}
+                    style={{
+                      padding: "4px 12px",
+                      background: "#f0f0f0",
+                      borderRadius: "12px",
+                      fontSize: "0.875rem",
+                      textDecoration: "none",
+                      color: "#333",
+                    }}
+                  >
+                    #{tag.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </header>
 
           {post.content_json && Array.isArray(post.content_json) ? (

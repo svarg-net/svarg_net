@@ -10,17 +10,24 @@ import (
 	"svarg_net/internal/service"
 )
 
-// PostHandler обработчики для постов
 type PostHandler struct {
-	service service.PostService
-	log     logger.Logger
+	service         service.PostService
+	categoryService service.CategoryService
+	tagService      service.TagService
+	log             logger.Logger
 }
 
-// NewPostHandler создаёт новый обработчик постов
-func NewPostHandler(service service.PostService, log logger.Logger) *PostHandler {
+func NewPostHandler(
+	service service.PostService,
+	categoryService service.CategoryService,
+	tagService service.TagService,
+	log logger.Logger,
+) *PostHandler {
 	return &PostHandler{
-		service: service,
-		log:     log,
+		service:         service,
+		categoryService: categoryService,
+		tagService:      tagService,
+		log:             log,
 	}
 }
 
@@ -143,4 +150,68 @@ func (h *PostHandler) respondError(w http.ResponseWriter, status int, message st
 	h.respondJSON(w, status, map[string]string{
 		"error": message,
 	})
+}
+
+// ListPostsByCategory GET /api/v1/categories/{slug}/posts
+func (h *PostHandler) ListPostsByCategory(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	if slug == "" {
+		h.respondError(w, http.StatusBadRequest, "slug is required")
+		return
+	}
+
+	// Получаем категорию по slug
+	category, err := h.categoryService.GetBySlug(r.Context(), slug)
+	if err != nil {
+		h.respondError(w, http.StatusNotFound, "category not found")
+		return
+	}
+
+	status := r.URL.Query().Get("status")
+	if status == "" {
+		status = "published"
+	}
+
+	page := 1
+	perPage := 20
+
+	response, err := h.service.ListByCategory(r.Context(), category.ID, status, page, perPage)
+	if err != nil {
+		h.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respondJSON(w, http.StatusOK, response)
+}
+
+// ListPostsByTag GET /api/v1/tags/{slug}/posts
+func (h *PostHandler) ListPostsByTag(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	if slug == "" {
+		h.respondError(w, http.StatusBadRequest, "slug is required")
+		return
+	}
+
+	// Получаем тег по slug
+	tag, err := h.tagService.GetBySlug(r.Context(), slug)
+	if err != nil {
+		h.respondError(w, http.StatusNotFound, "tag not found")
+		return
+	}
+
+	status := r.URL.Query().Get("status")
+	if status == "" {
+		status = "published"
+	}
+
+	page := 1
+	perPage := 20
+
+	response, err := h.service.ListByTag(r.Context(), tag.ID, status, page, perPage)
+	if err != nil {
+		h.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respondJSON(w, http.StatusOK, response)
 }
