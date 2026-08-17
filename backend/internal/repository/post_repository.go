@@ -288,6 +288,31 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		argIndex++
 	}
 
+	// Мета-информация
+	if req.MetaTitle != nil {
+		setParts = append(setParts, fmt.Sprintf("meta_title = $%d", argIndex))
+		args = append(args, *req.MetaTitle)
+		argIndex++
+	}
+
+	if req.MetaDescription != nil {
+		setParts = append(setParts, fmt.Sprintf("meta_description = $%d", argIndex))
+		args = append(args, *req.MetaDescription)
+		argIndex++
+	}
+
+	if req.MetaKeywords != nil {
+		setParts = append(setParts, fmt.Sprintf("meta_keywords = $%d", argIndex))
+		args = append(args, *req.MetaKeywords)
+		argIndex++
+	}
+
+	if req.OGImage != nil {
+		setParts = append(setParts, fmt.Sprintf("og_image = $%d", argIndex))
+		args = append(args, *req.OGImage)
+		argIndex++
+	}
+
 	if len(setParts) == 0 {
 		return r.GetByID(ctx, id)
 	}

@@ -231,7 +231,7 @@ export async function updatePost(
   token: string,
   id: number,
   data: {
-    title?: string;
+    title: string;
     excerpt?: string;
     content_md?: string;
     content_json?: any[];
