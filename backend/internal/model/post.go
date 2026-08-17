@@ -25,6 +25,14 @@ type Post struct {
 	PublishedAt *time.Time       `json:"published_at,omitempty"`
 	CreatedAt   time.Time        `json:"created_at"`
 	UpdatedAt   time.Time        `json:"updated_at"`
+	// Категория и теги
+	CategoryID *int64 `json:"category_id,omitempty"`
+	Tags       []Tag  `json:"tags,omitempty"`
+	// Мета-информация для SEO
+	MetaTitle       string   `json:"meta_title,omitempty"`
+	MetaDescription string   `json:"meta_description,omitempty"`
+	MetaKeywords    []string `json:"meta_keywords,omitempty"`
+	OGImage         string   `json:"og_image,omitempty"`
 }
 
 // PostCreateRequest запрос на создание поста
@@ -34,6 +42,13 @@ type PostCreateRequest struct {
 	ContentMD   string           `json:"content_md,omitempty"`
 	ContentJSON *json.RawMessage `json:"content_json,omitempty"`
 	Status      string           `json:"status"`
+	CategoryID  *int64           `json:"category_id,omitempty"`
+	TagIDs      []int64          `json:"tag_ids,omitempty"`
+	// Мета-информация
+	MetaTitle       string   `json:"meta_title"`
+	MetaDescription string   `json:"meta_description"`
+	MetaKeywords    []string `json:"meta_keywords"`
+	OGImage         string   `json:"og_image"`
 }
 
 // PostUpdateRequest запрос на обновление поста
@@ -43,6 +58,13 @@ type PostUpdateRequest struct {
 	ContentMD   *string          `json:"content_md,omitempty"`
 	ContentJSON *json.RawMessage `json:"content_json,omitempty"`
 	Status      *string          `json:"status,omitempty"`
+	CategoryID  *int64           `json:"category_id,omitempty"`
+	TagIDs      *[]int64         `json:"tag_ids,omitempty"`
+	// Мета-информация
+	MetaTitle       *string   `json:"meta_title,omitempty"`
+	MetaDescription *string   `json:"meta_description,omitempty"`
+	MetaKeywords    *[]string `json:"meta_keywords,omitempty"`
+	OGImage         *string   `json:"og_image,omitempty"`
 }
 
 // PostListResponse ответ со списком постов

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPosts, deletePost, type Post } from "@/lib/api";
 import { getToken, isAuthenticated } from "@/lib/auth";
+import AdminNav from "@/components/AdminNav";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -77,6 +78,7 @@ export default function AdminPostsPage() {
   return (
     <div className="admin-container">
       <div className="admin-header">
+        <AdminNav/>
         <h1>Управление постами</h1>
         <div className="admin-nav">
           <Link href="/">На сайт</Link>
