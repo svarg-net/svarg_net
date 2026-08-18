@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import type { Value } from "platejs";
+import type { PlateValue } from "@/lib/plate-types";
 import {
   getPosts,
   updatePost,
@@ -18,7 +18,7 @@ import {
 import { getToken, isAuthenticated } from "@/lib/auth";
 import PlateEditor from "@/components/PlateEditor";
 
-const emptyContent: Value = [
+const emptyContent: PlateValue = [
   {
     type: "p",
     children: [{ text: "" }],
@@ -33,7 +33,7 @@ export default function EditPostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState<Value>(emptyContent);
+  const [content, setContent] = useState<PlateValue>(emptyContent);
   const [status, setStatus] = useState("draft");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -75,7 +75,7 @@ export default function EditPostPage() {
       setPost(found);
       setTitle(found.title);
       setExcerpt(found.excerpt || "");
-      setContent((found.content_json as Value) || emptyContent);
+      setContent((found.content_json as PlateValue) || emptyContent);
       setStatus(found.status);
       setSelectedCategory(found.category_id || 0);
       setSelectedTags((found.tags || []).map((t) => t.id));

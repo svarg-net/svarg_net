@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Value } from "platejs";
+import type { PlateValue } from "@/lib/plate-types";
 import {
   createPost,
   getCategories,
@@ -16,7 +16,7 @@ import {
 import { getToken, isAuthenticated } from "@/lib/auth";
 import PlateEditor from "@/components/PlateEditor";
 
-const initialValue: Value = [
+const initialValue: PlateValue = [
   {
     type: "p",
     children: [{ text: "" }],
@@ -27,7 +27,7 @@ export default function NewPostPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState<Value>(initialValue);
+  const [content, setContent] = useState<PlateValue>(initialValue);
   const [status, setStatus] = useState("draft");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
