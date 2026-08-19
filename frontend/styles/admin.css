@@ -1,0 +1,164 @@
+/* ==================== Админка ==================== */
+
+/* ==================== Admin Layout ==================== */
+
+.admin-layout {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0;
+}
+
+.admin-nav {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+/* Навигационное меню админки */
+.admin-nav-menu {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.admin-nav-menu a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 5px 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.admin-nav-menu a:hover {
+  color: var(--primary-color);
+}
+
+.admin-nav-menu a.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+/* Таблица постов */
+.posts-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.posts-table th,
+.posts-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.posts-table th {
+  background: var(--bg-light);
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.posts-table tr:last-child td {
+  border-bottom: none;
+}
+
+.posts-table tr:hover {
+  background: var(--bg-light);
+}
+
+/* Статусы постов */
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-draft {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-published {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-archived {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+/* Действия в таблице */
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions .btn {
+  padding: 5px 12px;
+  font-size: 0.875rem;
+}
+
+/* Страница логина */
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 40px;
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 20px 15px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .posts-table {
+    font-size: 0.875rem;
+  }
+
+  .posts-table th,
+  .posts-table td {
+    padding: 8px 10px;
+  }
+}

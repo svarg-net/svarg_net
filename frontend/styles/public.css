@@ -1,0 +1,136 @@
+/* ==================== Публичный сайт ==================== */
+
+/* Заголовки */
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: var(--text-color);
+}
+
+h2 {
+  font-size: 1.75rem;
+  margin-bottom: 15px;
+}
+
+/* Список постов */
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.post-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.post-card h2 {
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.post-card .excerpt {
+  color: var(--text-light);
+  margin-bottom: 15px;
+}
+
+.post-card .meta {
+  color: var(--text-lighter);
+  font-size: 0.875rem;
+}
+
+/* Страница поста */
+.post-content {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.post-content h1 {
+  margin-bottom: 10px;
+}
+
+.post-content .meta {
+  color: var(--text-lighter);
+  margin-bottom: 30px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Markdown preview */
+.md-preview h1,
+.md-preview h2,
+.md-preview h3 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+.md-preview p {
+  margin-bottom: 15px;
+}
+
+.md-preview blockquote {
+  border-left: 4px solid var(--primary-color);
+  padding-left: 20px;
+  margin: 20px 0;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.md-preview pre {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.md-preview code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.md-preview ul,
+.md-preview ol {
+  padding-left: 25px;
+  margin-bottom: 15px;
+}
+
+.md-preview a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .post-content {
+    padding: 20px;
+  }
+}
