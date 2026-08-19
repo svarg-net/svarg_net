@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   typescript: {
     // Временно отключаем проверку типов при сборке
     // потому что TypeScript не видит типы Plate.js v53+
-    ignoreBuildErrors: true,
+  //  ignoreBuildErrors: true,
   },
 };
 

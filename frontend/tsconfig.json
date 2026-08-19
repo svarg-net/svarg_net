@@ -17,7 +17,9 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "plugins": [
       {
         "name": "next"
@@ -31,7 +33,6 @@
   },
   "include": [
     "next-env.d.ts",
-     "platejs.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
