@@ -24,7 +24,7 @@ import type { PlateValue } from "@/lib/plate-types";
 
 type PlateEditorProps = {
   initialValue: PlateValue;
-  onChange: (value: PlateValue) => void;
+  onChange: (_value: PlateValue) => void;
   readOnly?: boolean;
 };
 
@@ -59,9 +59,9 @@ export default function PlateEditor({
   return (
     <Plate
       editor={editor}
-      onChange={({ value }) => {
+      onChange={(changeEvent) => {
         if (!readOnly && onChange) {
-          onChange(value);
+          onChange(changeEvent.value);
         }
       }}
     >
@@ -99,24 +99,24 @@ function EditorToolbar() {
         borderRadius: "6px 6px 0 0",
       }}
     >
-      <ToolbarButton format="bold" label="B" />
-      <ToolbarButton format="italic" label="I" />
-      <ToolbarButton format="underline" label="U" />
-      <ToolbarButton format="strikethrough" label="S" />
-      <ToolbarButton format="code" label="<>" />
+      <ToolbarButton label="B" />
+      <ToolbarButton label="I" />
+      <ToolbarButton label="U" />
+      <ToolbarButton label="S" />
+      <ToolbarButton label="<>" />
       <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
-      <ToolbarButton format="h1" label="H1" />
-      <ToolbarButton format="h2" label="H2" />
-      <ToolbarButton format="h3" label="H3" />
+      <ToolbarButton label="H1" />
+      <ToolbarButton label="H2" />
+      <ToolbarButton label="H3" />
       <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
-      <ToolbarButton format="blockquote" label="❝" />
-      <ToolbarButton format="code-block" label="Code" />
-      <ToolbarButton format="link" label="🔗" />
+      <ToolbarButton label="❝" />
+      <ToolbarButton label="Code" />
+      <ToolbarButton label="🔗" />
     </div>
   );
 }
 
-function ToolbarButton({ format, label }: { format: string; label: string }) {
+function ToolbarButton({ label }: { label: string }) {
   return (
     <button
       type="button"

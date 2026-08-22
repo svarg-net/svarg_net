@@ -39,7 +39,7 @@ ${posts
         "Content-Type": "application/xml",
       },
     });
-  } catch (error) {
+  } catch  {
     return new Response("Error generating sitemap", { status: 500 });
   }
 }

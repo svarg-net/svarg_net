@@ -7,8 +7,6 @@ import type { PlateValue } from "@/lib/plate-types";
 import {
   getPosts,
   updatePost,
-  getCategories,
-  getTags,
   createCategory,
   createTag,
   type Post,
@@ -30,7 +28,7 @@ export default function EditPostPage() {
   const params = useParams();
   const postId = Number(params.id);
 
-  const [post, setPost] = useState<Post | null>(null);
+  const [, setPost] = useState<Post | null>(null);
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState<PlateValue>(emptyContent);
@@ -53,14 +51,15 @@ export default function EditPostPage() {
   const [metaKeywords, setMetaKeywords] = useState("");
   const [ogImage, setOgImage] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/admin/login");
-      return;
-    }
+useEffect(() => {
+  if (!isAuthenticated()) {
+    router.push("/admin/login");
+    return;
+  }
 
-    loadPost();
-  }, [postId, router]);
+  loadPost();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [postId, router]);
 
   const loadPost = async () => {
     try {

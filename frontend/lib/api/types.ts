@@ -61,7 +61,7 @@ export type Post = {
   title: string;
   excerpt?: string;
   content_md?: string;
-  content_json?: any[];
+  content_json?: unknown[];
   status: string;
   published_at?: string;
   created_at: string;
@@ -86,7 +86,7 @@ export type PostCreateData = {
   title: string;
   excerpt?: string;
   content_md?: string;
-  content_json?: any[];
+  content_json?: unknown[];
   status: string;
   category_id?: number;
   tag_ids?: number[];
@@ -100,7 +100,7 @@ export type PostUpdateData = {
   title?: string;
   excerpt?: string;
   content_md?: string;
-  content_json?: any[];
+  content_json?: unknown[];
   status?: string;
   category_id?: number;
   tag_ids?: number[];

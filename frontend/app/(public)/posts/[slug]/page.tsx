@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PlateRenderer from "@/components/PlateRenderer";
-import { getPostBySlug, getCategories, getTags, type Category, type Tag } from "@/lib/api";
+import { getPostBySlug, getCategories, type Category, type Post } from "@/lib/api";
+import type { PlateValue } from "@/lib/plate-types";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 // JSON-LD разметка для поисковых систем
-function ArticleJsonLd({ post }: { post: any }) {
+function ArticleJsonLd({ post }: { post: Post }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -131,16 +132,11 @@ export default async function PostPage({ params }: Props) {
 
   // Получаем категории и теги для отображения
   let categories: Category[] = [];
-  let allTags: Tag[] = [];
   try {
-    const [catResponse, tagResponse] = await Promise.all([
-      getCategories(),
-      getTags(),
-    ]);
+    const catResponse = await getCategories();
     categories = catResponse.items || [];
-    allTags = tagResponse.items || [];
   } catch (err) {
-    console.error("Failed to load categories/tags:", err);
+    console.error("Failed to load categories:", err);
   }
 
   const postCategory = categories.find((c) => c.id === post.category_id);
@@ -192,7 +188,7 @@ export default async function PostPage({ params }: Props) {
           </header>
 
           {post.content_json && Array.isArray(post.content_json) ? (
-            <PlateRenderer content={post.content_json} />
+            <PlateRenderer content={post.content_json as PlateValue} />
           ) : post.content_md ? (
             <pre style={{ whiteSpace: "pre-wrap" }}>{post.content_md}</pre>
           ) : (

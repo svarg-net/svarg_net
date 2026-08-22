@@ -1,6 +1,6 @@
 // API функции для аутентификации
 
-import { apiFetch, apiGet } from "./client";
+import { apiFetch } from "./client";
 import type { LoginResponse, User } from "./types";
 
 /**
@@ -23,6 +23,10 @@ export async function login(
  * Получение текущего пользователя по токену
  */
 export async function getMe(token: string): Promise<User> {
-  const response = await apiGet<{ user: User }>("/api/v1/auth/me");
+  const response = await apiFetch<{ user: User }>("/api/v1/auth/me", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.user;
 }
