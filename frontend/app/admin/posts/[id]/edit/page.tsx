@@ -9,6 +9,8 @@ import {
   updatePost,
   createCategory,
   createTag,
+  getCategories,
+  getTags,
   type Post,
   type Category,
   type Tag,
@@ -58,6 +60,7 @@ useEffect(() => {
   }
 
   loadPost();
+  loadCategoriesAndTags();
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [postId, router]);
 
@@ -86,6 +89,19 @@ useEffect(() => {
       setError((err as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+    const loadCategoriesAndTags = async () => {
+    try {
+      const [catResponse, tagResponse] = await Promise.all([
+        getCategories(),
+        getTags(),
+      ]);
+      setCategories(catResponse.items || []);
+      setTags(tagResponse.items || []);
+    } catch (err) {
+      console.error("Failed to load categories/tags:", err);
     }
   };
 

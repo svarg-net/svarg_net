@@ -76,7 +76,7 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, error) {
 	query := `
 		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
 		FROM posts
 		WHERE id = $1
 	`
@@ -87,6 +87,7 @@ func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, er
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
 		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
+		&post.CategoryID,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -102,7 +103,7 @@ func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, er
 func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Post, error) {
 	query := `
 		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),category_id
 		FROM posts
 		WHERE slug = $1
 	`
@@ -113,6 +114,7 @@ func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Pos
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
 		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
+		&post.CategoryID,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -141,7 +143,7 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 	if status != "" {
 		query = `
 			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
+				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
 			FROM posts
 			WHERE status = $1
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
@@ -151,7 +153,7 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 	} else {
 		query = `
 			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
+				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
 			FROM posts
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
 			LIMIT $1 OFFSET $2
@@ -173,6 +175,7 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 			&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 			&post.CreatedAt, &post.UpdatedAt,
 			&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
+			&post.CategoryID,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
@@ -260,31 +263,6 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 	if req.CategoryID != nil {
 		setParts = append(setParts, fmt.Sprintf("category_id = $%d", argIndex))
 		args = append(args, *req.CategoryID)
-		argIndex++
-	}
-
-	// Мета-информация
-	if req.MetaTitle != nil {
-		setParts = append(setParts, fmt.Sprintf("meta_title = $%d", argIndex))
-		args = append(args, *req.MetaTitle)
-		argIndex++
-	}
-
-	if req.MetaDescription != nil {
-		setParts = append(setParts, fmt.Sprintf("meta_description = $%d", argIndex))
-		args = append(args, *req.MetaDescription)
-		argIndex++
-	}
-
-	if req.MetaKeywords != nil {
-		setParts = append(setParts, fmt.Sprintf("meta_keywords = $%d", argIndex))
-		args = append(args, *req.MetaKeywords)
-		argIndex++
-	}
-
-	if req.OGImage != nil {
-		setParts = append(setParts, fmt.Sprintf("og_image = $%d", argIndex))
-		args = append(args, *req.OGImage)
 		argIndex++
 	}
 
