@@ -13,7 +13,6 @@ import {
   type Category,
   type Tag,
 } from "@/lib/api";
-import { getToken, isAuthenticated } from "@/lib/auth";
 import PlateEditor from "@/components/PlateEditor";
 
 const initialValue: PlateValue = [
@@ -47,12 +46,8 @@ export default function NewPostPage() {
   const [ogImage, setOgImage] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/admin/login");
-      return;
-    }
     loadCategoriesAndTags();
-  }, [router]);
+  }, []);
 
   const loadCategoriesAndTags = async () => {
     try {
@@ -70,11 +65,8 @@ export default function NewPostPage() {
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
 
-    const token = getToken();
-    if (!token) return;
-
     try {
-      const newCategory = await createCategory(token, { name: newCategoryName.trim() });
+      const newCategory = await createCategory({ name: newCategoryName.trim() });
       setCategories([...categories, newCategory]);
       setSelectedCategory(newCategory.id);
       setNewCategoryName("");
@@ -86,11 +78,8 @@ export default function NewPostPage() {
   const handleAddTag = async () => {
     if (!newTagName.trim()) return;
 
-    const token = getToken();
-    if (!token) return;
-
     try {
-      const newTag = await createTag(token, { name: newTagName.trim() });
+      const newTag = await createTag({ name: newTagName.trim() });
       setTags([...tags, newTag]);
       setSelectedTags([...selectedTags, newTag.id]);
       setNewTagName("");
@@ -110,22 +99,11 @@ export default function NewPostPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isAuthenticated()) {
-      router.push("/admin/login");
-      return;
-    }
-
-    const token = getToken();
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     setError("");
     setLoading(true);
 
     try {
-      await createPost(token, {
+      await createPost({
         title,
         excerpt,
         content_json: content,
@@ -191,7 +169,6 @@ export default function NewPostPage() {
           />
         </div>
 
-        {/* Категория и теги */}
         <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
           <legend style={{ fontWeight: "bold", padding: "0 10px" }}>Категория и теги</legend>
 
@@ -287,7 +264,6 @@ export default function NewPostPage() {
           </select>
         </div>
 
-        {/* Секция мета-информации */}
         <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
           <legend style={{ fontWeight: "bold", padding: "0 10px" }}>SEO / Мета-информация</legend>
 

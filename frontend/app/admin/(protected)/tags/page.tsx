@@ -9,11 +9,12 @@ import {
   deleteTag,
   type Tag,
 } from "@/lib/api";
-import { getToken, isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import AdminNav from "@/components/AdminNav";
 
 export default function AdminTagsPage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,12 +28,8 @@ export default function AdminTagsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/admin/login");
-      return;
-    }
     loadTags();
-  }, [router]);
+  }, []);
 
   const loadTags = async () => {
     try {
@@ -56,17 +53,11 @@ export default function AdminTagsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = getToken();
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     setSaving(true);
     setError("");
 
     try {
-      await createTag(token, {
+      await createTag({
         name,
         meta_title: metaTitle,
         meta_description: metaDescription,
@@ -84,19 +75,16 @@ export default function AdminTagsPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Удалить этот тег?")) return;
 
-    const token = getToken();
-    if (!token) return;
-
     try {
-      await deleteTag(token, id);
+      await deleteTag(id);
       await loadTags();
     } catch (err) {
       alert((err as Error).message);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    await logout();
     router.push("/admin/login");
   };
 

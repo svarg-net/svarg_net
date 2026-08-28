@@ -7,15 +7,14 @@ import type { PlateValue } from "@/lib/plate-types";
 import {
   getPosts,
   updatePost,
-  createCategory,
-  createTag,
   getCategories,
   getTags,
+  createCategory,
+  createTag,
   type Post,
   type Category,
   type Tag,
 } from "@/lib/api";
-import { getToken, isAuthenticated } from "@/lib/auth";
 import PlateEditor from "@/components/PlateEditor";
 
 const emptyContent: PlateValue = [
@@ -53,16 +52,11 @@ export default function EditPostPage() {
   const [metaKeywords, setMetaKeywords] = useState("");
   const [ogImage, setOgImage] = useState("");
 
-useEffect(() => {
-  if (!isAuthenticated()) {
-    router.push("/admin/login");
-    return;
-  }
-
-  loadPost();
-  loadCategoriesAndTags();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [postId, router]);
+  useEffect(() => {
+    loadPost();
+    loadCategoriesAndTags();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId, router]);
 
   const loadPost = async () => {
     try {
@@ -87,12 +81,13 @@ useEffect(() => {
       setOgImage(found.og_image || "");
     } catch (err) {
       setError((err as Error).message);
+      // Если 401 — редирект на логин произойдёт автоматически в apiFetch
     } finally {
       setLoading(false);
     }
   };
 
-    const loadCategoriesAndTags = async () => {
+  const loadCategoriesAndTags = async () => {
     try {
       const [catResponse, tagResponse] = await Promise.all([
         getCategories(),
@@ -108,11 +103,8 @@ useEffect(() => {
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
 
-    const token = getToken();
-    if (!token) return;
-
     try {
-      const newCategory = await createCategory(token, { name: newCategoryName.trim() });
+      const newCategory = await createCategory({ name: newCategoryName.trim() });
       setCategories([...categories, newCategory]);
       setSelectedCategory(newCategory.id);
       setNewCategoryName("");
@@ -124,11 +116,8 @@ useEffect(() => {
   const handleAddTag = async () => {
     if (!newTagName.trim()) return;
 
-    const token = getToken();
-    if (!token) return;
-
     try {
-      const newTag = await createTag(token, { name: newTagName.trim() });
+      const newTag = await createTag({ name: newTagName.trim() });
       setTags([...tags, newTag]);
       setSelectedTags([...selectedTags, newTag.id]);
       setNewTagName("");
@@ -148,17 +137,11 @@ useEffect(() => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = getToken();
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     setError("");
     setSaving(true);
 
     try {
-      await updatePost(token, postId, {
+      await updatePost(postId, {
         title,
         excerpt,
         content_json: content,
@@ -176,6 +159,7 @@ useEffect(() => {
       router.push("/admin/posts");
     } catch (err) {
       setError((err as Error).message);
+      // Если 401 — редирект на логин произойдёт автоматически в apiFetch
     } finally {
       setSaving(false);
     }
@@ -230,7 +214,6 @@ useEffect(() => {
           />
         </div>
 
-        {/* Категория и теги */}
         <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
           <legend style={{ fontWeight: "bold", padding: "0 10px" }}>Категория и теги</legend>
 
@@ -326,7 +309,6 @@ useEffect(() => {
           </select>
         </div>
 
-        {/* Секция мета-информации */}
         <fieldset style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
           <legend style={{ fontWeight: "bold", padding: "0 10px" }}>SEO / Мета-информация</legend>
 
