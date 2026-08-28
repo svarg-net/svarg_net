@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Если уже залогинен — редиректим в админку
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/admin/posts");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +25,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await login(email, password);
-      setToken(response.token);
+      await login(email, password);
       router.push("/admin/posts");
     } catch (err) {
       setError((err as Error).message);
@@ -27,6 +33,18 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="login-container">
+        <p>Загрузка...</p>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="login-container">

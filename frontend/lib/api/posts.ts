@@ -3,9 +3,6 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
 import type { Post, PostListResponse, PostCreateData, PostUpdateData } from "./types";
 
-/**
- * Получение списка постов
- */
 export async function getPosts(
   status: string = "published",
   page: number = 1,
@@ -27,9 +24,6 @@ export async function getPosts(
   };
 }
 
-/**
- * Получение поста по slug
- */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   try {
     return await apiGet<Post>(`/api/v1/posts/${slug}`);
@@ -41,9 +35,6 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   }
 }
 
-/**
- * Получение постов по категории
- */
 export async function getPostsByCategory(
   categorySlug: string,
   status: string = "published",
@@ -56,21 +47,9 @@ export async function getPostsByCategory(
     per_page: String(perPage),
   });
 
-  const data = await apiGet<PostListResponse>(
-    `/api/v1/categories/${categorySlug}/posts?${params}`
-  );
-
-  return {
-    items: data.items || [],
-    total: data.total || 0,
-    page: data.page || page,
-    per_page: data.per_page || perPage,
-  };
+  return apiGet<PostListResponse>(`/api/v1/categories/${categorySlug}/posts?${params}`);
 }
 
-/**
- * Получение постов по тегу
- */
 export async function getPostsByTag(
   tagSlug: string,
   status: string = "published",
@@ -83,26 +62,10 @@ export async function getPostsByTag(
     per_page: String(perPage),
   });
 
-  const data = await apiGet<PostListResponse>(
-    `/api/v1/tags/${tagSlug}/posts?${params}`
-  );
-
-  return {
-    items: data.items || [],
-    total: data.total || 0,
-    page: data.page || page,
-    per_page: data.per_page || perPage,
-  };
+  return apiGet<PostListResponse>(`/api/v1/tags/${tagSlug}/posts?${params}`);
 }
 
-/**
- * Создание поста
- */
-export async function createPost(
-  token: string,
-  data: PostCreateData
-): Promise<Post> {
-  // Удаляем undefined значения
+export async function createPost(data: PostCreateData): Promise<Post> {
   const cleanData: Record<string, unknown> = {};
   Object.entries(data).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -110,18 +73,10 @@ export async function createPost(
     }
   });
 
-  return apiPost<Post>("/api/v1/posts", token, cleanData);
+  return apiPost<Post>("/api/v1/posts", cleanData);
 }
 
-/**
- * Обновление поста
- */
-export async function updatePost(
-  token: string,
-  id: number,
-  data: PostUpdateData
-): Promise<Post> {
-  // Удаляем undefined значения
+export async function updatePost(id: number, data: PostUpdateData): Promise<Post> {
   const cleanData: Record<string, unknown> = {};
   Object.entries(data).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -129,12 +84,9 @@ export async function updatePost(
     }
   });
 
-  return apiPatch<Post>(`/api/v1/posts/${id}`, token, cleanData);
+  return apiPatch<Post>(`/api/v1/posts/${id}`, cleanData);
 }
 
-/**
- * Удаление поста
- */
-export async function deletePost(token: string, id: number): Promise<void> {
-  return apiDelete<void>(`/api/v1/posts/${id}`, token);
+export async function deletePost(id: number): Promise<void> {
+  return apiDelete<void>(`/api/v1/posts/${id}`);
 }

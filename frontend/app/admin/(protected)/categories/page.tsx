@@ -10,11 +10,12 @@ import {
   deleteCategory,
   type Category,
 } from "@/lib/api";
-import { getToken, isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import AdminNav from "@/components/AdminNav";
 
 export default function AdminCategoriesPage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,12 +31,8 @@ export default function AdminCategoriesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/admin/login");
-      return;
-    }
     loadCategories();
-  }, [router]);
+  }, []);
 
   const loadCategories = async () => {
     try {
@@ -71,18 +68,12 @@ export default function AdminCategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = getToken();
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     setSaving(true);
     setError("");
 
     try {
       if (editingCategory) {
-        await updateCategory(token, editingCategory.id, {
+        await updateCategory(editingCategory.id, {
           name,
           description,
           meta_title: metaTitle,
@@ -90,7 +81,7 @@ export default function AdminCategoriesPage() {
           og_image: ogImage,
         });
       } else {
-        await createCategory(token, {
+        await createCategory({
           name,
           description,
           meta_title: metaTitle,
@@ -110,19 +101,16 @@ export default function AdminCategoriesPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Удалить эту категорию?")) return;
 
-    const token = getToken();
-    if (!token) return;
-
     try {
-      await deleteCategory(token, id);
+      await deleteCategory(id);
       await loadCategories();
     } catch (err) {
       alert((err as Error).message);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    await logout();
     router.push("/admin/login");
   };
 

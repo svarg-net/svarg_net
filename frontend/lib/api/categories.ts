@@ -3,21 +3,10 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
 import type { Category, CategoryListResponse, CategoryCreateData, CategoryUpdateData } from "./types";
 
-/**
- * Получение списка категорий
- */
 export async function getCategories(): Promise<CategoryListResponse> {
-  const data = await apiGet<CategoryListResponse>("/api/v1/categories");
-
-  return {
-    items: data.items || [],
-    total: data.total || 0,
-  };
+  return apiGet<CategoryListResponse>("/api/v1/categories");
 }
 
-/**
- * Получение категории по slug
- */
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   try {
     return await apiGet<Category>(`/api/v1/categories/${slug}`);
@@ -29,30 +18,14 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   }
 }
 
-/**
- * Создание категории
- */
-export async function createCategory(
-  token: string,
-  data: CategoryCreateData
-): Promise<Category> {
-  return apiPost<Category>("/api/v1/categories", token, data);
+export async function createCategory(data: CategoryCreateData): Promise<Category> {
+  return apiPost<Category>("/api/v1/categories", data);
 }
 
-/**
- * Обновление категории
- */
-export async function updateCategory(
-  token: string,
-  id: number,
-  data: CategoryUpdateData
-): Promise<Category> {
-  return apiPatch<Category>(`/api/v1/categories/${id}`, token, data);
+export async function updateCategory(id: number, data: CategoryUpdateData): Promise<Category> {
+  return apiPatch<Category>(`/api/v1/categories/${id}`, data);
 }
 
-/**
- * Удаление категории
- */
-export async function deleteCategory(token: string, id: number): Promise<void> {
-  return apiDelete<void>(`/api/v1/categories/${id}`, token);
+export async function deleteCategory(id: number): Promise<void> {
+  return apiDelete<void>(`/api/v1/categories/${id}`);
 }

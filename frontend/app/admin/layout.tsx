@@ -1,14 +1,12 @@
-import type { ReactNode } from "react";
+import { AuthProvider } from "@/context/AuthContext";
 import "@/styles/admin.css";
 
+// Базовый layout для всей админки
+// Только AuthProvider — защита в (protected)/layout.tsx
 export default function AdminLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
-  return (
-    <div className="admin-layout">
-      {children}
-    </div>
-  );
+  return <AuthProvider>{children}</AuthProvider>;
 }

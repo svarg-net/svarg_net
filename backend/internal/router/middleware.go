@@ -12,6 +12,7 @@ import (
 )
 
 // corsMiddleware добавляет CORS заголовки
+// corsMiddleware добавляет CORS заголовки
 func corsMiddleware(next http.Handler, allowedOrigins []string) http.Handler {
 	allowedMap := make(map[string]struct{})
 	for _, origin := range allowedOrigins {
@@ -25,6 +26,8 @@ func corsMiddleware(next http.Handler, allowedOrigins []string) http.Handler {
 			if _, ok := allowedMap[origin]; ok {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Vary", "Origin")
+				// ✅ ВАЖНО для работы httpOnly cookies между localhost:3000 и localhost:8080
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
 				w.Header().Set(
 					"Access-Control-Allow-Methods",
 					"GET, POST, PUT, PATCH, DELETE, OPTIONS",

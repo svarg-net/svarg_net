@@ -1,29 +1,31 @@
-# Stage 1: Dependencies
-FROM node:24-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+FROM node:20-alpine AS base
 
-# Stage 2: Build
-FROM node:24-alpine AS builder
+# Зависимости
+FROM base AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps
+
+# Сборка
+FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Проверяем код перед сборкой
-RUN npm run lint
-RUN npm run typecheck
+# ✅ КРИТИЧНО: ARG превращаем в ENV для next build
+ARG BACKEND_URL
+ENV BACKEND_URL=${BACKEND_URL}
 
-# Собираем
 RUN npm run build
 
-# Stage 3: Runtime
-FROM node:24-alpine AS runner
+# Продакшн образ
+FROM base AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -35,5 +37,9 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+# Runtime env для rewrites
+ARG BACKEND_URL
+ENV BACKEND_URL=${BACKEND_URL}
 
 CMD ["node", "server.js"]

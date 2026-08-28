@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPosts, deletePost, type Post } from "@/lib/api";
-import { getToken, isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import AdminNav from "@/components/AdminNav";
 
 function formatDate(dateString: string): string {
@@ -18,22 +18,17 @@ function formatDate(dateString: string): string {
 
 export default function AdminPostsPage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/admin/login");
-      return;
-    }
-
     loadPosts();
-  }, [router]);
+  }, []);
 
   const loadPosts = async () => {
     try {
-      // Получаем все посты (без фильтра по статусу)
       const response = await getPosts("", 1, 100);
       setPosts(response.items);
     } catch (err) {
@@ -48,22 +43,16 @@ export default function AdminPostsPage() {
       return;
     }
 
-    const token = getToken();
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     try {
-      await deletePost(token, id);
+      await deletePost(id);
       await loadPosts();
     } catch (err) {
       alert((err as Error).message);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    await logout();
     router.push("/admin/login");
   };
 
@@ -78,7 +67,7 @@ export default function AdminPostsPage() {
   return (
     <div className="admin-container">
       <div className="admin-header">
-        <AdminNav/>
+        <AdminNav />
         <h1>Управление постами</h1>
         <div className="admin-nav">
           <Link href="/">На сайт</Link>
