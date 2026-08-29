@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build
+.next/
+out/
+dist/
+
+# Env — НИКОГДА не коммитим
+.env
+.env.local
+.env.*.local
+deploy/.env
+
+# Docker
+postgres_data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Debug
+cookies.txt
+cookies_new.txt
+npm-debug.log*
