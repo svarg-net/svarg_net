@@ -10,6 +10,7 @@ export default function AdminNav() {
     { href: "/admin/posts", label: "Посты" },
     { href: "/admin/categories", label: "Категории" },
     { href: "/admin/tags", label: "Теги" },
+    { href: "/admin/media", label: "Медиа" },
   ];
 
   return (
