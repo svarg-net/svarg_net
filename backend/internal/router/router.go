@@ -31,10 +31,14 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger) http.Handler
 	categoryHandler := handler.NewCategoryHandler(categoryService, log)
 	tagHandler := handler.NewTagHandler(tagService, log)
 
+	mediaRepo := repository.NewMediaRepository(pool)
+	mediaService := service.NewMediaService(mediaRepo, log)
+	mediaHandler := handler.NewMediaHandler(mediaService, log)
+
 	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
-	registerRoutes(mux, pool, log, postHandler, authHandler, categoryHandler, tagHandler, authService)
+	registerRoutes(mux, pool, log, postHandler, authHandler, categoryHandler, tagHandler, authService, mediaHandler)
 
 	// Применяем middleware
 	var handler http.Handler = mux
@@ -54,6 +58,7 @@ func registerRoutes(
 	categoryHandler *handler.CategoryHandler,
 	tagHandler *handler.TagHandler,
 	authService service.AuthService,
+	mediaHandler *handler.MediaHandler,
 ) {
 	// Health check
 	mux.HandleFunc("GET /healthz", healthHandler(pool, log))
@@ -73,6 +78,9 @@ func registerRoutes(
 	mux.HandleFunc("GET /api/v1/tags/{slug}", tagHandler.GetTag)
 	mux.HandleFunc("GET /api/v1/tags/{slug}/posts", postHandler.ListPostsByTag)
 
+	// Media file (публичный) — ДО protectedHandler
+	mux.HandleFunc("GET /api/v1/media/{id}/file", mediaHandler.GetFile)
+
 	// Защищённые маршруты (требуют access token)
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("GET /api/v1/auth/me", authHandler.GetMe)
@@ -85,6 +93,11 @@ func registerRoutes(
 	protectedMux.HandleFunc("POST /api/v1/tags", tagHandler.CreateTag)
 	protectedMux.HandleFunc("PATCH /api/v1/tags/{id}", tagHandler.UpdateTag)
 	protectedMux.HandleFunc("DELETE /api/v1/tags/{id}", tagHandler.DeleteTag)
+
+	// Media (защищённые) — ДО создания protectedHandler
+	protectedMux.HandleFunc("POST /api/v1/media", mediaHandler.Upload)
+	protectedMux.HandleFunc("GET /api/v1/media", mediaHandler.List)
+	protectedMux.HandleFunc("DELETE /api/v1/media/{id}", mediaHandler.Delete)
 
 	// Применяем auth middleware к защищённым маршрутам
 	var protectedHandler http.Handler = protectedMux
@@ -101,4 +114,9 @@ func registerRoutes(
 	mux.Handle("PATCH /api/v1/tags/{id}", protectedHandler)
 	mux.Handle("POST /api/v1/tags", protectedHandler)
 	mux.Handle("DELETE /api/v1/tags/{id}", protectedHandler)
+
+	// Монтируем media маршруты
+	mux.Handle("POST /api/v1/media", protectedHandler)
+	mux.Handle("GET /api/v1/media", protectedHandler)
+	mux.Handle("DELETE /api/v1/media/{id}", protectedHandler)
 }

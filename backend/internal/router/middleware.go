@@ -12,7 +12,6 @@ import (
 )
 
 // corsMiddleware добавляет CORS заголовки
-// corsMiddleware добавляет CORS заголовки
 func corsMiddleware(next http.Handler, allowedOrigins []string) http.Handler {
 	allowedMap := make(map[string]struct{})
 	for _, origin := range allowedOrigins {
