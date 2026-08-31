@@ -37,4 +37,3 @@ export {
 
 // Client utilities
 export { getApiUrl } from "./client";
-export * from "./media";

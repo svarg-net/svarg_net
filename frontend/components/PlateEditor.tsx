@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   BaseBlockquotePlugin,
   BaseBoldPlugin,
@@ -15,17 +15,12 @@ import {
 import { ListPlugin } from "@platejs/list/react";
 import { LinkPlugin } from "@platejs/link/react";
 import { CodeBlockPlugin } from "@platejs/code-block/react";
-import { ImagePlugin } from "@platejs/media/react";
 import {
   Plate,
   PlateContent,
-  PlateElement,
-  useEditorRef,
   usePlateEditor,
-  type PlateElementProps,
 } from "@platejs/core/react";
 import type { PlateValue } from "@/lib/plate-types";
-import MediaPicker from "./MediaPicker";
 
 type PlateEditorProps = {
   initialValue: PlateValue;
@@ -52,7 +47,6 @@ export default function PlateEditor({
       ListPlugin,
       LinkPlugin,
       CodeBlockPlugin,
-      ImagePlugin,
     ],
     []
   );
@@ -60,11 +54,6 @@ export default function PlateEditor({
   const editor = usePlateEditor({
     plugins,
     value: initialValue,
-    override: {
-      components: {
-        img: ImageElement,
-      },
-    },
   });
 
   return (
@@ -97,112 +86,37 @@ export default function PlateEditor({
   );
 }
 
-function ImageElement(props: PlateElementProps) {
-  const element = props.element as { url?: string; alt?: string };
-
-  return (
-    <PlateElement {...props}>
-      <div contentEditable={false} style={{ margin: "12px 0" }}>
-        <img
-          src={element.url}
-          alt={element.alt || ""}
-          style={{
-            maxWidth: "100%",
-            height: "auto",
-            borderRadius: "6px",
-            display: "block",
-          }}
-        />
-        {element.alt ? (
-          <p
-            style={{
-              fontSize: "12px",
-              color: "#666",
-              textAlign: "center",
-              margin: "4px 0 0",
-            }}
-          >
-            {element.alt}
-          </p>
-        ) : null}
-      </div>
-    </PlateElement>
-  );
-}
-
 function EditorToolbar() {
-  const editor = useEditorRef();
-  const [showMediaPicker, setShowMediaPicker] = useState(false);
-
-  const handleInsertImage = (url: string, alt: string) => {
-    editor.tf.focus();
-    editor.tf.insertNodes({
-      type: "img",
-      url,
-      alt,
-      children: [{ text: "" }],
-    });
-    setShowMediaPicker(false);
-  };
-
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "5px",
-          padding: "10px",
-          borderBottom: "1px solid #eee",
-          background: "#f9f9f9",
-          borderRadius: "6px 6px 0 0",
-        }}
-      >
-        <ToolbarButton label="B" onMouseDown={() => editor.tf.toggleMark("bold")} />
-        <ToolbarButton label="I" onMouseDown={() => editor.tf.toggleMark("italic")} />
-        <ToolbarButton label="U" onMouseDown={() => editor.tf.toggleMark("underline")} />
-        <ToolbarButton label="S" onMouseDown={() => editor.tf.toggleMark("strikethrough")} />
-        <ToolbarButton label="<>" onMouseDown={() => editor.tf.toggleMark("code")} />
-        <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
-        <ToolbarButton label="H1" onMouseDown={() => editor.tf.toggleBlock("h1")} />
-        <ToolbarButton label="H2" onMouseDown={() => editor.tf.toggleBlock("h2")} />
-        <ToolbarButton label="H3" onMouseDown={() => editor.tf.toggleBlock("h3")} />
-        <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
-        <ToolbarButton label="❝" onMouseDown={() => editor.tf.toggleBlock("blockquote")} />
-        <ToolbarButton label="Code" onMouseDown={() => editor.tf.toggleBlock("code_block")} />
-        <ToolbarButton
-          label="🔗"
-          onMouseDown={() => {
-            const url = prompt("Введите URL:");
-            if (url) {
-              editor.tf.insertNodes({
-                type: "a",
-                url,
-                children: [{ text: url }],
-              });
-            }
-          }}
-        />
-        <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
-        <ToolbarButton label="🖼️" onMouseDown={() => setShowMediaPicker(true)} />
-      </div>
-
-      <MediaPicker
-        isOpen={showMediaPicker}
-        onClose={() => setShowMediaPicker(false)}
-        onSelect={handleInsertImage}
-      />
-    </>
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "5px",
+        padding: "10px",
+        borderBottom: "1px solid #eee",
+        background: "#f9f9f9",
+        borderRadius: "6px 6px 0 0",
+      }}
+    >
+      <ToolbarButton label="B" />
+      <ToolbarButton label="I" />
+      <ToolbarButton label="U" />
+      <ToolbarButton label="S" />
+      <ToolbarButton label="<>" />
+      <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
+      <ToolbarButton label="H1" />
+      <ToolbarButton label="H2" />
+      <ToolbarButton label="H3" />
+      <span style={{ margin: "0 5px", color: "#ccc" }}>|</span>
+      <ToolbarButton label="❝" />
+      <ToolbarButton label="Code" />
+      <ToolbarButton label="🔗" />
+    </div>
   );
 }
 
-function ToolbarButton({
-  label,
-  onMouseDown,
-}: {
-  label: string;
-  onMouseDown?: () => void;
-}) {
+function ToolbarButton({ label }: { label: string }) {
   return (
     <button
       type="button"
@@ -216,7 +130,6 @@ function ToolbarButton({
       }}
       onMouseDown={(e) => {
         e.preventDefault();
-        if (onMouseDown) onMouseDown();
       }}
     >
       {label}

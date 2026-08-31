@@ -12,6 +12,7 @@ import (
 )
 
 // corsMiddleware добавляет CORS заголовки
+// corsMiddleware добавляет CORS заголовки
 func corsMiddleware(next http.Handler, allowedOrigins []string) http.Handler {
 	allowedMap := make(map[string]struct{})
 	for _, origin := range allowedOrigins {
@@ -121,16 +122,4 @@ type responseWriter struct {
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
-}
-
-// securityHeadersMiddleware добавляет заголовки безопасности к ответам API
-func securityHeadersMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h := w.Header()
-		h.Set("X-Content-Type-Options", "nosniff")
-		h.Set("X-Frame-Options", "DENY")
-		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
-		h.Set("Content-Security-Policy", "default-src 'none'")
-		next.ServeHTTP(w, r)
-	})
 }
