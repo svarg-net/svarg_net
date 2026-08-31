@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"svarg_net/internal/config"
 	"svarg_net/internal/handler"
@@ -10,6 +11,7 @@ import (
 	"svarg_net/internal/service"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/time/rate"
 )
 
 // New создаёт и настраивает HTTP роутер
@@ -34,18 +36,23 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger) http.Handler
 	mediaRepo := repository.NewMediaRepository(pool)
 	mediaService := service.NewMediaService(mediaRepo, log)
 	mediaHandler := handler.NewMediaHandler(mediaService, log)
+	// Rate limiting: общий для API и строгий для логина (brute force)
+	generalLimiter := newRateLimiterStore(rate.Limit(20), 40)       // 20 rps, burst 40
+	loginLimiter := newRateLimiterStore(rate.Every(time.Minute), 5) // 5 попыток, затем 1/мин
 
 	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
-	registerRoutes(mux, pool, log, postHandler, authHandler, categoryHandler, tagHandler, authService, mediaHandler)
+	registerRoutes(mux, pool, log, postHandler, authHandler, categoryHandler, tagHandler, authService, mediaHandler,rateLimitMiddleware(loginLimiter))
 
 	// Применяем middleware
-	var handler http.Handler = mux
-	handler = corsMiddleware(handler, cfg.CORS.AllowedOrigins)
-	handler = loggingMiddleware(handler, log)
+	var h http.Handler = mux
+	h = rateLimitMiddleware(generalLimiter)(h)
+	h = loggingMiddleware(h, log)
+	h = securityHeadersMiddleware(h)
+	h = corsMiddleware(h, cfg.CORS.AllowedOrigins)
 
-	return handler
+	return h
 }
 
 // registerRoutes регистрирует все маршруты приложения
@@ -59,12 +66,13 @@ func registerRoutes(
 	tagHandler *handler.TagHandler,
 	authService service.AuthService,
 	mediaHandler *handler.MediaHandler,
+	loginLimit func(http.Handler) http.Handler,
 ) {
 	// Health check
 	mux.HandleFunc("GET /healthz", healthHandler(pool, log))
 
 	// Auth (публичные)
-	mux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
+	mux.Handle("POST /api/v1/auth/login", loginLimit(http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("POST /api/v1/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("POST /api/v1/auth/logout", authHandler.Logout)
 
