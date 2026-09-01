@@ -27,3 +27,9 @@ postgres_data/
 cookies.txt
 cookies_new.txt
 npm-debug.log*
+
+# Медиа-файлы пользователей (хранятся локально/volume, не в git)
+deploy/uploads/
+
+# Тестовые файлы
+deploy/test-image*
