@@ -1,14 +1,16 @@
 import type { MetadataRoute } from "next";
 
+const SITE_URL = process.env.SITE_URL || "https://svarg.net";
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/"],
+        disallow: ["/admin", "/api/"],
       },
     ],
-    sitemap: "https://svarg.net/sitemap.xml",
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
