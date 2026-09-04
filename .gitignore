@@ -34,3 +34,4 @@ deploy/uploads/
 # Тестовые файлы
 deploy/test-image*
 frontend/tsconfig.tsbuildinfo
+seed_test_posts.sh

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTagBySlug, getPostsByTag, type Post } from "@/lib/api";
+import Pagination from "@/components/Pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ function formatDate(dateString: string): string {
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -57,8 +59,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function TagPage({ params }: Props) {
+export default async function TagPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { page: pageStr } = await searchParams;
+  const page = parseInt(pageStr || "1", 10) || 1;
+  const perPage = 10;
+
   const tag = await getTagBySlug(slug);
 
   if (!tag) {
@@ -66,12 +72,16 @@ export default async function TagPage({ params }: Props) {
   }
 
   let posts: Post[] = [];
+  let total = 0;
   try {
-    const response = await getPostsByTag(tag.slug);
+    const response = await getPostsByTag(tag.slug, "published", page, perPage);
     posts = response.items || [];
+    total = response.total || 0;
   } catch (err) {
     console.error("Failed to fetch posts by tag:", err);
   }
+
+  const totalPages = Math.ceil(total / perPage);
 
   return (
     <div className="container">
@@ -82,21 +92,28 @@ export default async function TagPage({ params }: Props) {
           <p>Статей с этим тегом пока нет</p>
         </div>
       ) : (
-        <div className="post-list">
-          {posts.map((post) => (
-            <article key={post.id} className="post-card">
-              <Link href={`/posts/${post.slug}`}>
-                <h2>{post.title}</h2>
-                {post.excerpt && <p className="excerpt">{post.excerpt}</p>}
-                <div className="meta">
-                  <time dateTime={post.published_at || post.created_at}>
-                    {formatDate(post.published_at || post.created_at)}
-                  </time>
-                </div>
-              </Link>
-            </article>
-          ))}
-        </div>
+        <>
+          <div className="post-list">
+            {posts.map((post) => (
+              <article key={post.id} className="post-card">
+                <Link href={`/posts/${post.slug}`}>
+                  <h2>{post.title}</h2>
+                  {post.excerpt && <p className="excerpt">{post.excerpt}</p>}
+                  <div className="meta">
+                    <time dateTime={post.published_at || post.created_at}>
+                      {formatDate(post.published_at || post.created_at)}
+                    </time>
+                  </div>
+                </Link>
+              </article>
+            ))}
+          </div>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            baseUrl={`/tags/${tag.slug}`}
+          />
+        </>
       )}
     </div>
   );
