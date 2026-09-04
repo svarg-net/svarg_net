@@ -22,6 +22,7 @@ type PostRepository interface {
 	ListByTag(ctx context.Context, tagID int64, status string, page, perPage int) (*model.PostListResponse, error)
 	Update(ctx context.Context, id int64, req *model.PostUpdateRequest) (*model.Post, error)
 	Delete(ctx context.Context, id int64) error
+	Search(ctx context.Context, query string, status string, limit, offset int) ([]*model.Post, error)
 }
 
 type postRepository struct {
@@ -465,4 +466,52 @@ func (r *postRepository) ListByTag(ctx context.Context, tagID int64, status stri
 		Page:    page,
 		PerPage: perPage,
 	}, nil
+}
+
+func (r *postRepository) Search(ctx context.Context, query string, status string, limit, offset int) ([]*model.Post, error) {
+	searchQuery := `
+		SELECT 
+			p.id, p.author_id, p.slug, p.title, p.excerpt, p.content_md, p.content_json,
+			p.category_id, p.status, p.published_at, p.created_at, p.updated_at,
+			p.meta_title, p.meta_description, p.meta_keywords, p.og_image
+		FROM posts p
+		WHERE p.search_vector @@ plainto_tsquery('russian', $1)
+		  AND ($2 = '' OR p.status = $2)
+		ORDER BY ts_rank_cd(p.search_vector, plainto_tsquery('russian', $1)) DESC
+		LIMIT $3 OFFSET $4
+	`
+
+	rows, err := r.pool.Query(ctx, searchQuery, query, status, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*model.Post
+	for rows.Next() {
+		post := &model.Post{}
+		var metaKeywords []string
+
+		err := rows.Scan(
+			&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
+			&post.ContentMD, &post.ContentJSON,
+			&post.CategoryID, &post.Status,
+			&post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
+			&post.MetaTitle, &post.MetaDescription, &metaKeywords, &post.OGImage,
+		)
+		if err != nil {
+			return nil, err
+		}
+		post.MetaKeywords = metaKeywords
+
+		// Загружаем теги отдельным запросом
+		tags, err := r.tagRepo.GetPostTags(ctx, post.ID)
+		if err == nil {
+			post.Tags = tags
+		}
+
+		results = append(results, post)
+	}
+
+	return results, nil
 }

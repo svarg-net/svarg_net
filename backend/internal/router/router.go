@@ -39,11 +39,23 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger) http.Handler
 	// Rate limiting: общий для API и строгий для логина (brute force)
 	generalLimiter := newRateLimiterStore(rate.Limit(20), 40)       // 20 rps, burst 40
 	loginLimiter := newRateLimiterStore(rate.Every(time.Minute), 5) // 5 попыток, затем 1/мин
-
+	searchService := service.NewSearchService(postRepo, log)
+	searchHandler := handler.NewSearchHandler(searchService, log)
 	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
-	registerRoutes(mux, pool, log, postHandler, authHandler, categoryHandler, tagHandler, authService, mediaHandler,rateLimitMiddleware(loginLimiter))
+	registerRoutes(mux,
+		pool,
+		log,
+		postHandler,
+		authHandler,
+		categoryHandler,
+		tagHandler,
+		authService,
+		mediaHandler,
+		searchHandler,
+		rateLimitMiddleware(loginLimiter),
+	)
 
 	// Применяем middleware
 	var h http.Handler = mux
@@ -66,6 +78,7 @@ func registerRoutes(
 	tagHandler *handler.TagHandler,
 	authService service.AuthService,
 	mediaHandler *handler.MediaHandler,
+	searchHandler *handler.SearchHandler,
 	loginLimit func(http.Handler) http.Handler,
 ) {
 	// Health check
@@ -89,6 +102,7 @@ func registerRoutes(
 	// Media file (публичный) — ДО protectedHandler
 	mux.HandleFunc("GET /api/v1/media/{id}/file", mediaHandler.GetFile)
 
+	mux.HandleFunc("GET /api/v1/search", searchHandler.Search)
 	// Защищённые маршруты (требуют access token)
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("GET /api/v1/auth/me", authHandler.GetMe)
