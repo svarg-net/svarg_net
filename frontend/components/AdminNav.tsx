@@ -11,6 +11,7 @@ export default function AdminNav() {
     { href: "/admin/categories", label: "Категории" },
     { href: "/admin/tags", label: "Теги" },
     { href: "/admin/media", label: "Медиа" },
+    { href: "/admin/stats", label: "Статистика" },
   ];
 
   return (
