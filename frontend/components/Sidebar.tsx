@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCategories, getTags, type Category, type Tag } from "@/lib/api";
+import PopularPosts from "@/components/PopularPosts";
 
 export default async function Sidebar() {
   let categories: Category[] = [];
@@ -60,6 +61,8 @@ export default async function Sidebar() {
           </div>
         )}
       </div>
+      {/* Популярные посты */}
+      <PopularPosts />
     </aside>
   );
 }

@@ -41,6 +41,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger) http.Handler
 	loginLimiter := newRateLimiterStore(rate.Every(time.Minute), 5) // 5 попыток, затем 1/мин
 	searchService := service.NewSearchService(postRepo, log)
 	searchHandler := handler.NewSearchHandler(searchService, log)
+
+	statsRepo := repository.NewStatsRepository(pool)
+	statsService := service.NewStatsService(statsRepo)
+	statsHandler := handler.NewStatsHandler(statsService, log)
 	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
@@ -54,6 +58,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger) http.Handler
 		authService,
 		mediaHandler,
 		searchHandler,
+		statsHandler,
 		rateLimitMiddleware(loginLimiter),
 	)
 
@@ -79,6 +84,7 @@ func registerRoutes(
 	authService service.AuthService,
 	mediaHandler *handler.MediaHandler,
 	searchHandler *handler.SearchHandler,
+	statsHandler *handler.StatsHandler,
 	loginLimit func(http.Handler) http.Handler,
 ) {
 	// Health check
@@ -103,6 +109,9 @@ func registerRoutes(
 	mux.HandleFunc("GET /api/v1/media/{id}/file", mediaHandler.GetFile)
 
 	mux.HandleFunc("GET /api/v1/search", searchHandler.Search)
+	mux.HandleFunc("GET /api/v1/posts/popular", statsHandler.ListPopular)
+	mux.HandleFunc("POST /api/v1/posts/{slug}/view", statsHandler.RecordView)
+	mux.HandleFunc("GET /api/v1/posts/{slug}/views", statsHandler.GetViews)
 	// Защищённые маршруты (требуют access token)
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("GET /api/v1/auth/me", authHandler.GetMe)
@@ -115,6 +124,7 @@ func registerRoutes(
 	protectedMux.HandleFunc("POST /api/v1/tags", tagHandler.CreateTag)
 	protectedMux.HandleFunc("PATCH /api/v1/tags/{id}", tagHandler.UpdateTag)
 	protectedMux.HandleFunc("DELETE /api/v1/tags/{id}", tagHandler.DeleteTag)
+	protectedMux.HandleFunc("GET /api/v1/admin/stats", statsHandler.GetAdminStats)
 
 	// Media (защищённые) — ДО создания protectedHandler
 	protectedMux.HandleFunc("POST /api/v1/media", mediaHandler.Upload)
@@ -126,6 +136,7 @@ func registerRoutes(
 	protectedHandler = authMiddleware(protectedHandler, authService, log)
 
 	// Монтируем защищённые маршруты
+	mux.Handle("GET /api/v1/admin/stats", protectedHandler)
 	mux.Handle("GET /api/v1/auth/me", protectedHandler)
 	mux.Handle("POST /api/v1/posts", protectedHandler)
 	mux.Handle("PATCH /api/v1/posts/{id}", protectedHandler)
