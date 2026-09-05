@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import PlateRenderer from "@/components/PlateRenderer";
 import { getPostBySlug, getCategories, type Category, type Post } from "@/lib/api";
 import type { PlateValue } from "@/lib/plate-types";
+import PostViewCounter from "@/components/PostViewCounter";
+import { getPostViews } from "@/lib/api/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +131,13 @@ export default async function PostPage({ params }: Props) {
   if (!post) {
     notFound();
   }
+   // Получаем число просмотров
+  let initialViews = 0;
+  try {
+    initialViews = await getPostViews(slug);
+  } catch {
+    // тихо игнорируем
+  }
 
   // Получаем категории и теги для отображения
   let categories: Category[] = [];
@@ -156,6 +165,9 @@ export default async function PostPage({ params }: Props) {
               <time dateTime={post.published_at || post.created_at}>
                 {formatDate(post.published_at || post.created_at)}
               </time>
+              <span style={{ marginLeft: "15px" }}>
+                <PostViewCounter slug={post.slug} initialViews={initialViews} />
+              </span>
               {postCategory && (
                 <span style={{ marginLeft: "15px" }}>
                   Категория:{" "}
