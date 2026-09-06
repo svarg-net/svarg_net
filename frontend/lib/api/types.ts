@@ -72,6 +72,7 @@ export type Post = {
   meta_description?: string;
   meta_keywords?: string[];
   og_image?: string;
+  comments_enabled?: boolean;
 };
 
 export type PostListResponse = {
@@ -94,6 +95,7 @@ export type PostCreateData = {
   meta_description?: string;
   meta_keywords?: string[];
   og_image?: string;
+  comments_enabled?: boolean;
 };
 
 export type PostUpdateData = {
@@ -108,6 +110,7 @@ export type PostUpdateData = {
   meta_description?: string;
   meta_keywords?: string[];
   og_image?: string;
+  comments_enabled?: boolean;
 };
 
 // Типы для создания/обновления категорий

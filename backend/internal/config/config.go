@@ -10,10 +10,11 @@ import (
 
 // Config содержит всю конфигурацию приложения
 type Config struct {
-	App  App
-	DB   Database
-	CORS CORS
-	JWT  JWT
+	App   App
+	DB    Database
+	CORS  CORS
+	JWT   JWT
+	Redis Redis
 }
 
 // App конфигурация приложения
@@ -38,6 +39,11 @@ type JWT struct {
 	ExpirationHours int
 }
 
+// Redis конфигурация Redis
+type Redis struct {
+	Addr string
+}
+
 // Load загружает конфигурацию из переменных окружения
 func Load() (*Config, error) {
 	// Пытаемся загрузить .env.local (для локальной разработки)
@@ -53,6 +59,7 @@ func Load() (*Config, error) {
 	dbURL := getEnv("DATABASE_URL", "")
 	jwtSecret := getEnv("JWT_SECRET", "")
 	jwtExpiration := getEnvInt("JWT_EXPIRATION_HOURS", 24)
+	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
 
 	if dbURL == "" {
 		return nil, fmt.Errorf("DATABASE_URL is required")
@@ -78,6 +85,9 @@ func Load() (*Config, error) {
 		JWT: JWT{
 			Secret:          jwtSecret,
 			ExpirationHours: jwtExpiration,
+		},
+		Redis: Redis{
+			Addr: redisAddr,
 		},
 	}, nil
 }
