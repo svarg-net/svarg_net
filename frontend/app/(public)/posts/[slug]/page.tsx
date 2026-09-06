@@ -6,6 +6,7 @@ import { getPostBySlug, getCategories, type Category, type Post } from "@/lib/ap
 import type { PlateValue } from "@/lib/plate-types";
 import PostViewCounter from "@/components/PostViewCounter";
 import { getPostViews } from "@/lib/api/stats";
+import CommentList from "@/components/CommentList";
 
 export const dynamic = "force-dynamic";
 
@@ -207,6 +208,11 @@ export default async function PostPage({ params }: Props) {
             <p>Контент отсутствует</p>
           )}
         </article>
+        <CommentList
+          postId={post.id}
+          postSlug={post.slug}
+          commentsEnabled={post.comments_enabled ?? true}
+        />
       </div>
     </>
   );
