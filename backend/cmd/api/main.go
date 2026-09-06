@@ -10,6 +10,7 @@ import (
 
 	"svarg_net/internal/config"
 	"svarg_net/internal/logger"
+	"svarg_net/internal/redisclient"
 	"svarg_net/internal/router"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -41,9 +42,17 @@ func main() {
 	if err := pool.Ping(ctx); err != nil {
 		log.Warn("database ping failed", "error", err)
 	}
+	// Подключение к Redis
+	redisClient, err := redisclient.New(cfg.Redis.Addr)
+	if err != nil {
+		log.Error("Failed to connect to Redis", "error", err)
+		os.Exit(1)
+	}
+	defer redisClient.Close()
+	log.Info("Connected to Redis", "addr", cfg.Redis.Addr)
 
 	// Создаём роутер
-	handler := router.New(cfg, pool, log)
+	handler := router.New(cfg, pool, log, redisClient)
 
 	// Создаём HTTP сервер
 	server := &http.Server{
