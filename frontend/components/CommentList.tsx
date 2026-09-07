@@ -5,6 +5,7 @@ import { getComments, type Comment } from "@/lib/api/comments";
 import CommentMarkdown from "@/components/CommentMarkdown";
 import CommentForm from "@/components/CommentForm";
 import "@/styles/comments.css";
+
 type Props = {
   postId: number;
   postSlug: string;
