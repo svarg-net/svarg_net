@@ -73,6 +73,7 @@ export type Post = {
   meta_keywords?: string[];
   og_image?: string;
   comments_enabled?: boolean;
+  content_mode?: string; 
 };
 
 export type PostListResponse = {

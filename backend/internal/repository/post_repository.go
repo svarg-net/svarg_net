@@ -23,6 +23,7 @@ type PostRepository interface {
 	Update(ctx context.Context, id int64, req *model.PostUpdateRequest) (*model.Post, error)
 	Delete(ctx context.Context, id int64) error
 	Search(ctx context.Context, query string, status string, limit, offset int) ([]*model.Post, error)
+	UpdateContentMode(ctx context.Context, id int64, mode string) error
 }
 
 type postRepository struct {
@@ -41,11 +42,11 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 	query := `
 		INSERT INTO posts (
 			author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			meta_title, meta_description, meta_keywords, og_image, category_id
+			meta_title, meta_description, meta_keywords, og_image, category_id, comments_enabled
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now(), $9, $10, $11, $12, $13)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now(), $9, $10, $11, $12, $13, $14)
 		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id, comments_enabled, views_count, content_mode
 	`
 
 	var post model.Post
@@ -56,15 +57,20 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 		publishedAt = &now
 	}
 
+	commentsEnabled := true
+	if req.CommentsEnabled != nil {
+		commentsEnabled = *req.CommentsEnabled
+	}
+
 	err := r.pool.QueryRow(ctx, query,
 		authorID, slug, req.Title, req.Excerpt, req.ContentMD, req.ContentJSON, req.Status, publishedAt,
-		req.MetaTitle, req.MetaDescription, req.MetaKeywords, req.OGImage, req.CategoryID,
+		req.MetaTitle, req.MetaDescription, req.MetaKeywords, req.OGImage, req.CategoryID, commentsEnabled,
 	).Scan(
 		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
 		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
-		&post.CategoryID,
+		&post.CategoryID, &post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 	)
 
 	if err != nil {
@@ -75,36 +81,33 @@ func (r *postRepository) Create(ctx context.Context, req *model.PostCreateReques
 }
 
 func (r *postRepository) GetByID(ctx context.Context, id int64) (*model.Post, error) {
-	query := `
-		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
-		FROM posts
-		WHERE id = $1
-	`
-
-	var post model.Post
-	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&post.ID, &post.AuthorID, &post.Slug, &post.Title, &post.Excerpt,
-		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
-		&post.CreatedAt, &post.UpdatedAt,
-		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
-		&post.CategoryID,
+	var p model.Post
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, author_id, slug, title, excerpt, content_md, content_json,
+		       status, published_at, created_at, updated_at, category_id,
+		       meta_title, meta_description, meta_keywords, og_image,
+		       comments_enabled, views_count, content_mode
+		FROM posts WHERE id = $1
+	`, id).Scan(
+		&p.ID, &p.AuthorID, &p.Slug, &p.Title, &p.Excerpt, &p.ContentMD, &p.ContentJSON,
+		&p.Status, &p.PublishedAt, &p.CreatedAt, &p.UpdatedAt, &p.CategoryID,
+		&p.MetaTitle, &p.MetaDescription, &p.MetaKeywords, &p.OGImage,
+		&p.CommentsEnabled, &p.ViewsCount, &p.ContentMode,
 	)
-
 	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("post not found")
+		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get post: %w", err)
+		return nil, fmt.Errorf("failed to get post by id: %w", err)
 	}
-
-	return &post, nil
+	return &p, nil
 }
 
 func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Post, error) {
 	query := `
 		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),category_id
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),
+			category_id, comments_enabled, views_count, content_mode
 		FROM posts
 		WHERE slug = $1
 	`
@@ -115,7 +118,7 @@ func (r *postRepository) GetBySlug(ctx context.Context, slug string) (*model.Pos
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
 		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
-		&post.CategoryID,
+		&post.CategoryID, &post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -144,7 +147,8 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 	if status != "" {
 		query = `
 			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
+				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),
+				category_id, comments_enabled, views_count, content_mode
 			FROM posts
 			WHERE status = $1
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
@@ -154,7 +158,8 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 	} else {
 		query = `
 			SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
+				COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),
+				category_id, comments_enabled, views_count, content_mode
 			FROM posts
 			ORDER BY published_at DESC NULLS LAST, created_at DESC
 			LIMIT $1 OFFSET $2
@@ -176,7 +181,7 @@ func (r *postRepository) List(ctx context.Context, status string, page, perPage 
 			&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 			&post.CreatedAt, &post.UpdatedAt,
 			&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
-			&post.CategoryID,
+			&post.CategoryID, &post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
@@ -259,15 +264,13 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 			argIndex++
 		}
 	}
-	// Категория
-	// Категория
+
 	if req.CategoryID != nil {
 		setParts = append(setParts, fmt.Sprintf("category_id = $%d", argIndex))
 		args = append(args, *req.CategoryID)
 		argIndex++
 	}
 
-	// Мета-информация
 	if req.MetaTitle != nil {
 		setParts = append(setParts, fmt.Sprintf("meta_title = $%d", argIndex))
 		args = append(args, *req.MetaTitle)
@@ -292,6 +295,12 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		argIndex++
 	}
 
+	if req.CommentsEnabled != nil {
+		setParts = append(setParts, fmt.Sprintf("comments_enabled = $%d", argIndex))
+		args = append(args, *req.CommentsEnabled)
+		argIndex++
+	}
+
 	if len(setParts) == 0 {
 		return r.GetByID(ctx, id)
 	}
@@ -299,12 +308,13 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 	setParts = append(setParts, "updated_at = now()")
 
 	query := fmt.Sprintf(`
-    UPDATE posts
-    SET %s
-    WHERE id = $%d
-    RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-        COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''), category_id
-`, strings.Join(setParts, ", "), argIndex)
+		UPDATE posts
+		SET %s
+		WHERE id = $%d
+		RETURNING id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),
+			category_id, comments_enabled, views_count, content_mode
+	`, strings.Join(setParts, ", "), argIndex)
 
 	args = append(args, id)
 
@@ -314,7 +324,7 @@ func (r *postRepository) Update(ctx context.Context, id int64, req *model.PostUp
 		&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 		&post.CreatedAt, &post.UpdatedAt,
 		&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
-		&post.CategoryID,
+		&post.CategoryID, &post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -359,7 +369,8 @@ func (r *postRepository) ListByCategory(ctx context.Context, categoryID int64, s
 
 	query := `
 		SELECT id, author_id, slug, title, excerpt, content_md, content_json, status, published_at, created_at, updated_at,
-			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, '')
+			COALESCE(meta_title, ''), COALESCE(meta_description, ''), COALESCE(meta_keywords, '{}'), COALESCE(og_image, ''),
+			category_id, comments_enabled, views_count, content_mode
 		FROM posts
 		WHERE category_id = $1 AND status = $2
 		ORDER BY published_at DESC NULLS LAST, created_at DESC
@@ -380,6 +391,7 @@ func (r *postRepository) ListByCategory(ctx context.Context, categoryID int64, s
 			&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 			&post.CreatedAt, &post.UpdatedAt,
 			&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
+			&post.CategoryID, &post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
@@ -417,7 +429,8 @@ func (r *postRepository) ListByTag(ctx context.Context, tagID int64, status stri
 
 	query := `
 		SELECT p.id, p.author_id, p.slug, p.title, p.excerpt, p.content_md, p.content_json, p.status, p.published_at, p.created_at, p.updated_at,
-			COALESCE(p.meta_title, ''), COALESCE(p.meta_description, ''), COALESCE(p.meta_keywords, '{}'), COALESCE(p.og_image, '')
+			COALESCE(p.meta_title, ''), COALESCE(p.meta_description, ''), COALESCE(p.meta_keywords, '{}'), COALESCE(p.og_image, ''),
+			p.category_id, p.comments_enabled, p.views_count, p.content_mode
 		FROM posts p
 		JOIN post_tags pt ON p.id = pt.post_id
 		WHERE pt.tag_id = $1 AND p.status = $2
@@ -439,6 +452,7 @@ func (r *postRepository) ListByTag(ctx context.Context, tagID int64, status stri
 			&post.ContentMD, &post.ContentJSON, &post.Status, &post.PublishedAt,
 			&post.CreatedAt, &post.UpdatedAt,
 			&post.MetaTitle, &post.MetaDescription, &post.MetaKeywords, &post.OGImage,
+			&post.CategoryID, &post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
@@ -473,7 +487,8 @@ func (r *postRepository) Search(ctx context.Context, query string, status string
 		SELECT 
 			p.id, p.author_id, p.slug, p.title, p.excerpt, p.content_md, p.content_json,
 			p.category_id, p.status, p.published_at, p.created_at, p.updated_at,
-			p.meta_title, p.meta_description, p.meta_keywords, p.og_image
+			p.meta_title, p.meta_description, p.meta_keywords, p.og_image,
+			p.comments_enabled, p.views_count, p.content_mode
 		FROM posts p
 		WHERE p.search_vector @@ plainto_tsquery('russian', $1)
 		  AND ($2 = '' OR p.status = $2)
@@ -498,6 +513,7 @@ func (r *postRepository) Search(ctx context.Context, query string, status string
 			&post.CategoryID, &post.Status,
 			&post.PublishedAt, &post.CreatedAt, &post.UpdatedAt,
 			&post.MetaTitle, &post.MetaDescription, &metaKeywords, &post.OGImage,
+			&post.CommentsEnabled, &post.ViewsCount, &post.ContentMode,
 		)
 		if err != nil {
 			return nil, err
@@ -514,4 +530,12 @@ func (r *postRepository) Search(ctx context.Context, query string, status string
 	}
 
 	return results, nil
+}
+
+func (r *postRepository) UpdateContentMode(ctx context.Context, id int64, mode string) error {
+	_, err := r.pool.Exec(ctx, `UPDATE posts SET content_mode = $1, updated_at = now() WHERE id = $2`, mode, id)
+	if err != nil {
+		return fmt.Errorf("failed to update content_mode: %w", err)
+	}
+	return nil
 }

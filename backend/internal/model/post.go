@@ -33,6 +33,10 @@ type Post struct {
 	MetaDescription string   `json:"meta_description,omitempty"`
 	MetaKeywords    []string `json:"meta_keywords,omitempty"`
 	OGImage         string   `json:"og_image,omitempty"`
+
+	CommentsEnabled bool   `json:"comments_enabled"`
+	ViewsCount      int64  `json:"views_count"`
+	ContentMode     string `json:"content_mode"`
 }
 
 // PostCreateRequest запрос на создание поста
@@ -49,6 +53,7 @@ type PostCreateRequest struct {
 	MetaDescription string   `json:"meta_description"`
 	MetaKeywords    []string `json:"meta_keywords"`
 	OGImage         string   `json:"og_image"`
+	CommentsEnabled *bool    `json:"comments_enabled,omitempty"`
 }
 
 // PostUpdateRequest запрос на обновление поста
@@ -65,6 +70,7 @@ type PostUpdateRequest struct {
 	MetaDescription *string   `json:"meta_description,omitempty"`
 	MetaKeywords    *[]string `json:"meta_keywords,omitempty"`
 	OGImage         *string   `json:"og_image,omitempty"`
+	CommentsEnabled *bool     `json:"comments_enabled,omitempty"`
 }
 
 // PostListResponse ответ со списком постов

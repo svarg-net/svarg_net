@@ -1,0 +1,231 @@
+/* ===== Block Editor ===== */
+
+.block-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.block-editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+}
+
+.block-editor-toolbar-title {
+  font-weight: 600;
+  color: #222;
+}
+
+.block-editor-toolbar-hint {
+  font-size: 13px;
+  color: #888;
+  margin-top: 3px;
+}
+
+.block-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.block-add-row button {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 7px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.block-add-row button:hover:not(:disabled) {
+  border-color: #111;
+  background: #f5f5f5;
+}
+
+.block-add-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.block-editor-empty {
+  padding: 40px;
+  text-align: center;
+  color: #888;
+  background: #fafafa;
+  border: 1px dashed #ddd;
+  border-radius: 10px;
+}
+
+.block-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.block-editor-item {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.block-editor-item--dragging {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  border-color: #111;
+  opacity: 0.95;
+}
+
+.block-editor-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.block-editor-item-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #222;
+}
+
+.block-drag-handle {
+  border: none;
+  background: transparent;
+  cursor: grab;
+  color: #888;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.block-drag-handle:active {
+  cursor: grabbing;
+}
+
+.block-editor-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.block-editor-item-actions button {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.block-editor-item-actions button:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.block-editor-item-actions .danger {
+  color: #c33;
+  border-color: #f0c0c0;
+}
+
+.block-editor-item-body {
+  padding: 16px;
+}
+
+.block-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.block-editor-field:last-child {
+  margin-bottom: 0;
+}
+
+.block-editor-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.block-editor-field input,
+.block-editor-field textarea,
+.block-editor-field select {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  padding: 9px 11px;
+  background: #fff;
+}
+
+.block-editor-field textarea {
+  min-height: 110px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.block-editor-field textarea.code {
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 13px;
+  min-height: 180px;
+}
+
+.block-editor-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 700px) {
+  .block-editor-two-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.block-editor-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.block-editor-save-row button {
+  background: #111;
+  color: #fff;
+  border: 1px solid #111;
+  border-radius: 7px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.block-editor-save-row button:hover:not(:disabled) {
+  background: #333;
+}
+
+.block-editor-save-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.block-editor-badge {
+  font-size: 11px;
+  color: #888;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: #fff;
+}
