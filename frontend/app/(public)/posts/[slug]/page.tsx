@@ -7,7 +7,8 @@ import type { PlateValue } from "@/lib/plate-types";
 import PostViewCounter from "@/components/PostViewCounter";
 import { getPostViews } from "@/lib/api/stats";
 import CommentList from "@/components/CommentList";
-
+import BlockRenderer from "@/components/blocks/BlockRenderer";
+import { getPostBlocks } from "@/lib/api/blocks";
 export const dynamic = "force-dynamic";
 
 function formatDate(dateString: string): string {
@@ -36,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: "Статья не найдена",
     };
   }
+
 
   const url = `https://svarg.net/posts/${post.slug}`;
   const title = post.meta_title || post.title;
@@ -200,7 +202,9 @@ export default async function PostPage({ params }: Props) {
             )}
           </header>
 
-          {post.content_json && Array.isArray(post.content_json) ? (
+            {post.content_mode === "blocks" ? (
+            <BlockRenderer blocks={await getPostBlocks(post.slug)} />
+          ) : post.content_json && Array.isArray(post.content_json) ? (
             <PlateRenderer content={post.content_json as PlateValue} />
           ) : post.content_md ? (
             <pre style={{ whiteSpace: "pre-wrap" }}>{post.content_md}</pre>
