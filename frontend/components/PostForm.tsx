@@ -19,6 +19,8 @@ import PlateEditor from "@/components/PlateEditor";
 import PlateRenderer from "@/components/PlateRenderer";
 import AdminTabs, { useActiveTab } from "@/components/AdminTabs";
 import SeoPreview from "@/components/SeoPreview";
+import BlockEditor from "@/components/blocks/BlockEditor";
+import { convertPostToBlocks } from "@/lib/api/blocks";
 import "@/styles/post-form.css";
 
 const emptyContent: PlateValue = [{ type: "p", children: [{ text: "" }] }];
@@ -40,6 +42,9 @@ export default function PostForm({ mode, post }: Props) {
   const [status, setStatus] = useState(post?.status || "draft");
   const [commentsEnabled, setCommentsEnabled] = useState<boolean>(
     post?.comments_enabled ?? true
+  );
+  const [contentMode, setContentMode] = useState<string>(
+    post?.content_mode || "plate"
   );
 
   // Категория/теги
@@ -143,7 +148,7 @@ export default function PostForm({ mode, post }: Props) {
     const payload = {
       title,
       excerpt,
-      content_json: content,
+      content_json: contentMode === "blocks" ? undefined : content,
       status: finalStatus,
       category_id: selectedCategory > 0 ? selectedCategory : undefined,
       tag_ids: selectedTags.length > 0 ? selectedTags : undefined,
@@ -164,6 +169,30 @@ export default function PostForm({ mode, post }: Props) {
         await updatePost(post.id, payload);
       }
       router.push("/admin/posts");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+    const handleConvertToBlocks = async () => {
+    if (!post) return;
+    if (
+      !confirm(
+        "Конвертировать пост в блочный режим? Старый Plate-контент станет первым text-блоком."
+      )
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await convertPostToBlocks(post.id);
+      setContentMode("blocks");
+      alert("Пост конвертирован в блочный режим");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -212,9 +241,33 @@ export default function PostForm({ mode, post }: Props) {
               </small>
             </div>
 
-            <div className="form-group">
+                        <div className="form-group">
               <label>Контент</label>
-              <PlateEditor initialValue={content} onChange={setContent} />
+
+              {mode === "edit" && contentMode === "blocks" && post ? (
+                <BlockEditor postId={post.id} />
+              ) : (
+                <>
+                  <PlateEditor initialValue={content} onChange={setContent} />
+
+                  {mode === "edit" && post && (
+                    <div style={{ marginTop: "14px" }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={handleConvertToBlocks}
+                        disabled={saving}
+                      >
+                        Конвертировать в блочный редактор
+                      </button>
+                      <p style={{ color: "#888", fontSize: "13px" }}>
+                        После конвертации Plate-контент станет первым текстовым
+                        блоком. Дальше пост можно будет собирать из блоков.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}

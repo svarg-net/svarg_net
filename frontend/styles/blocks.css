@@ -1,0 +1,250 @@
+/* ===== Блоки поста ===== */
+
+.post-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* --- text --- */
+.block-text {
+  line-height: 1.7;
+}
+
+/* --- image --- */
+.block-image {
+  margin: 0;
+}
+
+.block-image img {
+  max-width: 100%;
+  border-radius: 10px;
+  display: block;
+}
+
+.block-image--center { text-align: center; }
+.block-image--center img { margin: 0 auto; }
+.block-image--left img { margin-right: auto; }
+.block-image--right img { margin-left: auto; }
+
+.block-image figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+}
+
+/* --- image-text --- */
+.block-image-text {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.block-image-text--right .block-image-text-media { order: 2; }
+.block-image-text--right .block-image-text-content { order: 1; }
+
+.block-image-text-media img {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+}
+
+.block-image-text-media figcaption {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #888;
+}
+
+@media (max-width: 700px) {
+  .block-image-text {
+    grid-template-columns: 1fr;
+  }
+  .block-image-text--right .block-image-text-media { order: 0; }
+  .block-image-text--right .block-image-text-content { order: 1; }
+}
+
+/* --- code --- */
+.block-code {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #2d2d2d;
+}
+
+.block-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2d2d2d;
+  padding: 8px 14px;
+}
+
+.block-code-lang {
+  font-size: 12px;
+  color: #aaa;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  text-transform: lowercase;
+}
+
+.block-code-copy {
+  background: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.block-code-copy:hover {
+  background: #444;
+  color: #fff;
+}
+
+.block-code-pre {
+  margin: 0;
+  padding: 16px 18px;
+  background: #1e1e1e;
+  color: #e6e6e6;
+  overflow-x: auto;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* --- gallery --- */
+.block-gallery--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.block-gallery--masonry {
+  columns: 3 220px;
+  column-gap: 12px;
+}
+
+.block-gallery--masonry .block-gallery-item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+.block-gallery--slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+}
+
+.block-gallery--slider .block-gallery-item {
+  flex: 0 0 320px;
+  scroll-snap-align: start;
+}
+
+.block-gallery-item {
+  margin: 0;
+}
+
+.block-gallery-item img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+.block-gallery-item figcaption {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* --- quote --- */
+.block-quote {
+  margin: 0;
+  padding: 20px 28px;
+  border-left: 4px solid #111;
+  background: #fafafa;
+  border-radius: 0 10px 10px 0;
+  font-size: 18px;
+  line-height: 1.6;
+  font-style: italic;
+  color: #333;
+}
+
+.block-quote p {
+  margin: 0 0 10px 0;
+}
+
+.block-quote cite {
+  display: block;
+  font-size: 14px;
+  color: #888;
+  font-style: normal;
+}
+
+/* --- callout --- */
+.block-callout {
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+
+.block-callout-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.block-callout-icon { font-size: 18px; }
+
+.block-callout-text {
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.block-callout--info {
+  background: #eef6ff;
+  border-color: #b3d7ff;
+  color: #1a4d8f;
+}
+
+.block-callout--success {
+  background: #eefbf9;
+  border-color: #b2e5d8;
+  color: #1a6b52;
+}
+
+.block-callout--warning {
+  background: #fff8ec;
+  border-color: #ffe0a3;
+  color: #8a5a00;
+}
+
+.block-callout--error {
+  background: #fef0f0;
+  border-color: #fcc;
+  color: #a02020;
+}
+
+/* --- divider --- */
+.block-divider--line {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 8px 0;
+}
+
+.block-divider--dots {
+  text-align: center;
+  color: #bbb;
+  letter-spacing: 12px;
+  font-size: 18px;
+  margin: 8px 0;
+}
+
+.block-divider--space {
+  height: 40px;
+}

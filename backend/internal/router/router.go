@@ -57,6 +57,11 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger, redisClient 
 	commentService := service.NewCommentService(commentRepo, postRepo, redisClient, log)
 	commentHandler := handler.NewCommentHandler(commentService, log)
 
+	// Блоки
+	blockRepo := repository.NewBlockRepository(pool)
+	blockService := service.NewBlockService(blockRepo, postRepo, log)
+	blockHandler := handler.NewBlockHandler(blockService, log)
+
 	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
@@ -72,6 +77,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, log logger.Logger, redisClient 
 		searchHandler,
 		statsHandler,
 		commentHandler,
+		blockHandler,
 		rateLimitMiddleware(loginLimiter),
 		rateLimitMiddleware(commentLimiter),
 	)
@@ -100,6 +106,7 @@ func registerRoutes(
 	searchHandler *handler.SearchHandler,
 	statsHandler *handler.StatsHandler,
 	commentHandler *handler.CommentHandler,
+	blockHandler *handler.BlockHandler,
 	loginLimit func(http.Handler) http.Handler,
 	commentLimit func(http.Handler) http.Handler,
 ) {
@@ -133,6 +140,8 @@ func registerRoutes(
 	mux.HandleFunc("GET /api/v1/posts/{slug}/comments", commentHandler.GetComments)
 	mux.HandleFunc("GET /api/v1/posts/{slug}/comment-token", commentHandler.IssueToken)
 	mux.Handle("POST /api/v1/comments", commentLimit(http.HandlerFunc(commentHandler.CreateComment)))
+	// Блоки (публично)
+	mux.HandleFunc("GET /api/v1/posts/{slug}/blocks", blockHandler.ListPublic)
 
 	// Защищённые маршруты (требуют access token)
 	protectedMux := http.NewServeMux()
@@ -159,6 +168,13 @@ func registerRoutes(
 	protectedMux.HandleFunc("POST /api/v1/admin/comments/{id}/approve", commentHandler.Approve)
 	protectedMux.HandleFunc("POST /api/v1/admin/comments/{id}/reject", commentHandler.Reject)
 	protectedMux.HandleFunc("DELETE /api/v1/admin/comments/{id}", commentHandler.Delete)
+	// Блоки (админка)
+	protectedMux.HandleFunc("GET /api/v1/admin/posts/{id}/blocks", blockHandler.ListForAdmin)
+	protectedMux.HandleFunc("POST /api/v1/admin/posts/{id}/blocks", blockHandler.Create)
+	protectedMux.HandleFunc("POST /api/v1/admin/posts/{id}/blocks/reorder", blockHandler.Reorder)
+	protectedMux.HandleFunc("POST /api/v1/admin/posts/{id}/convert-to-blocks", blockHandler.ConvertToBlocks)
+	protectedMux.HandleFunc("PATCH /api/v1/admin/blocks/{id}", blockHandler.Update)
+	protectedMux.HandleFunc("DELETE /api/v1/admin/blocks/{id}", blockHandler.Delete)
 
 	// Применяем auth middleware к защищённым маршрутам
 	var protectedHandler http.Handler = protectedMux
@@ -188,4 +204,12 @@ func registerRoutes(
 	mux.Handle("POST /api/v1/admin/comments/{id}/approve", protectedHandler)
 	mux.Handle("POST /api/v1/admin/comments/{id}/reject", protectedHandler)
 	mux.Handle("DELETE /api/v1/admin/comments/{id}", protectedHandler)
+
+	// Монтируем блочные маршруты
+	mux.Handle("GET /api/v1/admin/posts/{id}/blocks", protectedHandler)
+	mux.Handle("POST /api/v1/admin/posts/{id}/blocks", protectedHandler)
+	mux.Handle("POST /api/v1/admin/posts/{id}/blocks/reorder", protectedHandler)
+	mux.Handle("POST /api/v1/admin/posts/{id}/convert-to-blocks", protectedHandler)
+	mux.Handle("PATCH /api/v1/admin/blocks/{id}", protectedHandler)
+	mux.Handle("DELETE /api/v1/admin/blocks/{id}", protectedHandler)
 }
