@@ -1,29 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMedia, type MediaFile } from "@/lib/api/media";
+import {
+  getMedia,
+  uploadMedia,
+  type MediaFile,
+} from "@/lib/api";
+import "@/styles/media-picker.css";
 
-type MediaPickerProps = {
+type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (url: string, alt: string) => void;
+  onSelect: (media: MediaFile) => void;
 };
 
-export default function MediaPicker({ isOpen, onClose, onSelect }: MediaPickerProps) {
-  const [media, setMedia] = useState<MediaFile[]>([]);
+export default function MediaPicker({ isOpen, onClose, onSelect }: Props) {
+  const [items, setItems] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selected, setSelected] = useState<MediaFile | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadMedia();
-    }
-  }, [isOpen]);
-
-  const loadMedia = async () => {
+  const load = async () => {
     setLoading(true);
     try {
-      const response = await getMedia(100);
-      setMedia(response.items || []);
+      const res = await getMedia();
+      setItems(res.items || []);
     } catch (err) {
       console.error("Failed to load media:", err);
     } finally {
@@ -31,112 +32,105 @@ export default function MediaPicker({ isOpen, onClose, onSelect }: MediaPickerPr
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      setSelected(null);
+      load();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const uploaded = await uploadMedia(file);
+      setItems((prev) => [uploaded, ...prev]);
+      setSelected(uploaded);
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleConfirm = () => {
+    if (selected) {
+      onSelect(selected);
+      onClose();
+    }
+  };
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.5)",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: "white",
-          borderRadius: "8px",
-          padding: "20px",
-          maxWidth: "800px",
-          width: "90%",
-          maxHeight: "80vh",
-          overflow: "auto",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0 }}>Выберите изображение</h2>
-          <button onClick={onClose} className="btn btn-secondary">
-            Закрыть
+    <div className="media-picker-overlay" onClick={onClose}>
+      <div className="media-picker" onClick={(e) => e.stopPropagation()}>
+        <div className="media-picker-header">
+          <h3>Выберите картинку</h3>
+          <button type="button" onClick={onClose} className="close-btn">
+            ✕
           </button>
         </div>
 
+        <div className="media-picker-toolbar">
+          <label className="upload-btn">
+            {uploading ? "Загрузка..." : "📤 Загрузить новую"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              disabled={uploading}
+              style={{ display: "none" }}
+            />
+          </label>
+        </div>
+
         {loading ? (
-          <p>Загрузка...</p>
-        ) : media.length === 0 ? (
-          <p>Нет загруженных изображений. Загрузите файлы в медиабиблиотеке.</p>
+          <div className="media-picker-loading">Загрузка...</div>
+        ) : items.length === 0 ? (
+          <div className="media-picker-empty">
+            Нет загруженных картинок
+          </div>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-              gap: "15px",
-            }}
-          >
-            {media.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => onSelect(item.url, item.original_name)}
-                style={{
-                  cursor: "pointer",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#0066cc";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,102,204,0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#ddd";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                <div
-                  style={{
-                    height: "120px",
-                    background: "#f5f5f5",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+          <div className="media-picker-grid">
+            {items.map((item) => {
+              const src = item.url || `/api/v1/media/${item.id}/file`;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={
+                    "media-picker-item" +
+                    (selected?.id === item.id ? " selected" : "")
+                  }
+                  onClick={() => setSelected(item)}
                 >
-                  <img
-                    src={item.url}
-                    alt={item.original_name}
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "120px",
-                      objectFit: "contain",
-                    }}
-                  />
-                </div>
-                <div style={{ padding: "8px" }}>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "12px",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                    title={item.original_name}
-                  >
-                    {item.original_name}
-                  </p>
-                </div>
-              </div>
-            ))}
+                  <img src={src} alt={item.original_name} loading="lazy" />
+                  <div className="media-picker-item-name">
+                    {item.original_name || item.filename}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
+
+        <div className="media-picker-footer">
+          <button type="button" onClick={onClose} className="btn-secondary">
+            Отмена
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!selected}
+            className="btn-primary"
+          >
+            Выбрать
+          </button>
+        </div>
       </div>
     </div>
   );
