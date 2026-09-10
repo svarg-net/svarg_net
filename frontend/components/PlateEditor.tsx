@@ -26,6 +26,7 @@ import {
 } from "@platejs/core/react";
 import type { PlateValue } from "@/lib/plate-types";
 import MediaPicker from "./MediaPicker";
+import type { MediaFile } from "@/lib/api";
 
 type PlateEditorProps = {
   initialValue: PlateValue;
@@ -134,12 +135,17 @@ function EditorToolbar() {
   const editor = useEditorRef();
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
-  const handleInsertImage = (url: string, alt: string) => {
+    const handleInsertImage = (media: MediaFile) => {
+    const url =
+      media.url ||
+      `${
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+      }/api/v1/media/${media.id}/file`;
     editor.tf.focus();
     editor.tf.insertNodes({
       type: "img",
       url,
-      alt,
+      alt: media.original_name || media.filename,
       children: [{ text: "" }],
     });
     setShowMediaPicker(false);

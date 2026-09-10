@@ -13,6 +13,7 @@ import { resolveImageSrc } from "@/lib/api/blocks";
 import PlateRenderer from "@/components/PlateRenderer";
 import CopyButton from "@/components/blocks/CopyButton";
 import "@/styles/blocks.css";
+import GalleryClient from "@/components/blocks/GalleryClient";
 
 type Props = {
   blocks: Block[];
@@ -121,24 +122,7 @@ function CodeBlock({ data }: { data: CodeBlockData }) {
 
 // ===== gallery =====
 function GalleryBlock({ data }: { data: GalleryBlockData }) {
-  const items = data.items || [];
-  if (items.length === 0) return null;
-  const layout = data.layout || "grid";
-
-  return (
-    <div className={`block block-gallery block-gallery--${layout}`}>
-      {items.map((item, i) => {
-        const src = resolveImageSrc(item);
-        if (!src) return null;
-        return (
-          <figure key={i} className="block-gallery-item">
-            <img src={src} alt={item.caption || ""} loading="lazy" />
-            {item.caption && <figcaption>{item.caption}</figcaption>}
-          </figure>
-        );
-      })}
-    </div>
-  );
+  return <GalleryClient data={data} />;
 }
 
 // ===== quote =====

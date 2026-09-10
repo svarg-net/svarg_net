@@ -23,14 +23,21 @@ import {
   getAdminBlocks,
   reorderAdminBlocks,
   updateAdminBlock,
-  type Block,
-  type BlockType,
-  type CalloutBlockData,
-  type CodeBlockData,
-  type DividerBlockData,
-  type QuoteBlockData,
-  type TextBlockData,
 } from "@/lib/api/blocks";
+import type {
+  Block,
+  BlockType,
+  CalloutBlockData,
+  CodeBlockData,
+  DividerBlockData,
+  QuoteBlockData,
+  TextBlockData,
+  ImageBlockData,
+  ImageTextBlockData,
+  GalleryBlockData,
+} from "@/lib/api/blocks";
+import MediaPicker from "@/components/MediaPicker";
+import type { MediaFile } from "@/lib/api";
 import "@/styles/block-editor.css";
 
 const emptyPlate: PlateValue = [
@@ -97,6 +104,33 @@ const addableBlocks: Array<{
     label: "Разделитель",
     defaultData: {
       style: "line",
+    },
+  },
+    {
+    type: "image",
+    label: "Картинка",
+    defaultData: {
+      media_id: undefined,
+      caption: "",
+      align: "center",
+    },
+  },
+  {
+    type: "image-text",
+    label: "Картинка + текст",
+    defaultData: {
+      media_id: undefined,
+      caption: "",
+      layout: "left",
+      content_json: emptyPlate,
+    },
+  },
+  {
+    type: "gallery",
+    label: "Галерея",
+    defaultData: {
+      items: [],
+      layout: "grid",
     },
   },
 ];
@@ -426,6 +460,27 @@ function BlockFields({
           onChange={onChange}
         />
       );
+    case "image":
+      return (
+        <ImageBlockFields
+          data={block.data as ImageBlockData}
+          onChange={onChange}
+        />
+      );
+    case "image-text":
+      return (
+        <ImageTextBlockFields
+          data={block.data as ImageTextBlockData}
+          onChange={onChange}
+        />
+      );
+    case "gallery":
+      return (
+        <GalleryBlockFields
+          data={block.data as GalleryBlockData}
+          onChange={onChange}
+        />
+      );
     default:
       return (
         <div style={{ color: "#888" }}>
@@ -595,5 +650,303 @@ function DividerBlockFields({
         <option value="space">Пустой отступ</option>
       </select>
     </div>
+  );
+}
+function ImageBlockFields({
+  data,
+  onChange,
+}: {
+  data: ImageBlockData;
+  onChange: (data: Record<string, unknown>) => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleSelect = (media: MediaFile) => {
+    onChange({ ...data, media_id: media.id, url: "" });
+  };
+
+  const previewUrl = data.media_id
+  ? `/api/v1/media/${data.media_id}/file`
+  : data.url || "";
+
+  return (
+    <>
+      <div className="block-editor-field">
+        <label>Картинка</label>
+        {previewUrl && (
+          <div style={{ marginBottom: "12px" }}>
+            <img
+              src={previewUrl}
+              alt=""
+              style={{
+                maxWidth: "100%",
+                maxHeight: "300px",
+                borderRadius: "8px",
+              }}
+            />
+          </div>
+        )}
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => setShowPicker(true)}
+        >
+          {data.media_id ? "Изменить картинку" : "Выбрать картинку"}
+        </button>
+      </div>
+
+      <div className="block-editor-two-cols">
+        <div className="block-editor-field">
+          <label>Подпись</label>
+          <input
+            value={data.caption || ""}
+            onChange={(e) => onChange({ ...data, caption: e.target.value })}
+            placeholder="Описание картинки"
+          />
+        </div>
+
+        <div className="block-editor-field">
+          <label>Выравнивание</label>
+          <select
+            value={data.align || "center"}
+            onChange={(e) => onChange({ ...data, align: e.target.value })}
+          >
+            <option value="left">Слева</option>
+            <option value="center">По центру</option>
+            <option value="right">Справа</option>
+          </select>
+        </div>
+      </div>
+
+      {showPicker && (
+        <MediaPicker
+          isOpen={true}
+          onSelect={handleSelect}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function ImageTextBlockFields({
+  data,
+  onChange,
+}: {
+  data: ImageTextBlockData;
+  onChange: (data: Record<string, unknown>) => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleSelect = (media: MediaFile) => {
+    onChange({ ...data, media_id: media.id, url: "" });
+  };
+
+  const previewUrl = data.media_id
+  ? `/api/v1/media/${data.media_id}/file`
+  : data.url || "";
+
+  return (
+    <>
+      <div className="block-editor-two-cols">
+        <div className="block-editor-field">
+          <label>Картинка</label>
+          {previewUrl && (
+            <div style={{ marginBottom: "12px" }}>
+              <img
+                src={previewUrl}
+                alt=""
+                style={{
+                  width: "100%",
+                  maxHeight: "200px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                }}
+              />
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setShowPicker(true)}
+          >
+            {data.media_id ? "Изменить" : "Выбрать"}
+          </button>
+        </div>
+
+        <div className="block-editor-field">
+          <label>Расположение картинки</label>
+          <select
+            value={data.layout || "left"}
+            onChange={(e) => onChange({ ...data, layout: e.target.value })}
+          >
+            <option value="left">Слева</option>
+            <option value="right">Справа</option>
+          </select>
+
+          <label style={{ marginTop: "14px" }}>Подпись</label>
+          <input
+            value={data.caption || ""}
+            onChange={(e) => onChange({ ...data, caption: e.target.value })}
+            placeholder="Описание картинки"
+          />
+        </div>
+      </div>
+
+      <div className="block-editor-field">
+        <label>Текст</label>
+        <PlateEditor
+          initialValue={data.content_json || emptyPlate}
+          onChange={(next) => onChange({ ...data, content_json: next })}
+        />
+      </div>
+
+      {showPicker && (
+        <MediaPicker
+          isOpen={true}
+          onSelect={handleSelect}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function GalleryBlockFields({
+  data,
+  onChange,
+}: {
+  data: GalleryBlockData;
+  onChange: (data: Record<string, unknown>) => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+  const items = data.items || [];
+
+  const handleSelect = (media: MediaFile) => {
+    const newItem = {
+      media_id: media.id,
+      url: "",
+      caption: "",
+    };
+    onChange({ ...data, items: [...items, newItem] });
+  };
+
+  const handleRemove = (index: number) => {
+    onChange({
+      ...data,
+      items: items.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleCaptionChange = (index: number, caption: string) => {
+    onChange({
+      ...data,
+      items: items.map((item, i) => (i === index ? { ...item, caption } : item)),
+    });
+  };
+
+  return (
+    <>
+      <div className="block-editor-field">
+        <label>Layout</label>
+        <select
+          value={data.layout || "grid"}
+          onChange={(e) => onChange({ ...data, layout: e.target.value })}
+        >
+          <option value="grid">Сетка</option>
+          <option value="slider">Слайдер</option>
+          <option value="masonry">Masonry</option>
+        </select>
+      </div>
+
+      <div className="block-editor-field">
+        <label>Картинки ({items.length})</label>
+        {items.length > 0 && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+              gap: "12px",
+              marginBottom: "12px",
+            }}
+          >
+            {items.map((item, i) => {
+              const src = item.media_id
+                ? `/api/v1/media/${item.media_id}/file`
+                : item.url || "";
+              return (
+                <div
+                  key={i}
+                  style={{
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <img
+                    src={src}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "120px",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <div style={{ padding: "8px" }}>
+                    <input
+                      type="text"
+                      value={item.caption || ""}
+                      onChange={(e) =>
+                        handleCaptionChange(i, e.target.value)
+                      }
+                      placeholder="Подпись"
+                      style={{
+                        width: "100%",
+                        fontSize: "12px",
+                        padding: "4px 6px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        marginBottom: "6px",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(i)}
+                      style={{
+                        width: "100%",
+                        padding: "4px",
+                        background: "#c33",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => setShowPicker(true)}
+        >
+          + Добавить картинку
+        </button>
+      </div>
+
+      {showPicker && (
+        <MediaPicker
+          isOpen={true}
+          onSelect={handleSelect}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
+    </>
   );
 }
