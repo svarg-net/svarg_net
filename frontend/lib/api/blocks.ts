@@ -78,9 +78,7 @@ export type DividerBlockData = {
 
 /** URL файла из медиабиблиотеки */
 export function mediaUrl(id: number): string {
-  const base =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  return `${base}/api/v1/media/${id}/file`;
+  return `/api/v1/media/${id}/file`;
 }
 
 /** Resolve изображения: media_id приоритетнее прямого url */
