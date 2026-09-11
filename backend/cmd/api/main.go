@@ -52,7 +52,7 @@ func main() {
 	log.Info("Connected to Redis", "addr", cfg.Redis.Addr)
 
 	// Создаём роутер
-	handler := router.New(cfg, pool, log, redisClient)
+	handler := router.New(cfg, pool, log, redisClient).Build()
 
 	// Создаём HTTP сервер
 	server := &http.Server{
