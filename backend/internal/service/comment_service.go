@@ -2,43 +2,16 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"net"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 
 	"svarg_net/internal/logger"
 	"svarg_net/internal/model"
 	"svarg_net/internal/repository"
 )
-
-// Константы
-const (
-	commentTokenTTL = 15 * time.Minute
-	minTimeToReply  = 5 * time.Second
-	redisPrefix     = "comment:token:"
-)
-
-// Стоп-слова (корни — мат, оскорбления). Простой MVP-список.
-// Позже можно вынести в таблицу БД и редактировать из админки.
-var forbiddenWords = []string{
-	// мат
-	"блядь", "блять", "бля", "хуй", "хуя", "хуёв", "пизд", "пизд",
-	"ебать", "ебан", "ёбан", "ебн", "ебуч",
-	"сука", "сук", "пидор", "пидар", "мудак", "муда", "залуп",
-	"гандон", "шлюх", "долбо", "дебил",
-	// оскорбления (пример, расширять по ситуации)
-	"идиот", "дурак", "придурок", "урод", "тварь", "дерьм",
-}
 
 type CommentService interface {
 	IssueToken(ctx context.Context, postSlug string, r *http.Request) (string, error)
@@ -73,57 +46,6 @@ func NewCommentService(
 	}
 }
 
-// =========== Токены ===========
-
-type tokenPayload struct {
-	PostID   int64  `json:"post_id"`
-	IPHash   string `json:"ip_hash"`
-	IssuedAt int64  `json:"issued_at"`
-}
-
-// IssueToken выдаёт одноразовый токен на 15 минут.
-// Используется для защиты от ботов, не открывающих страницу поста.
-func (s *commentService) IssueToken(ctx context.Context, postSlug string, r *http.Request) (string, error) {
-	post, err := s.postRepo.GetBySlug(ctx, postSlug)
-	if err != nil {
-		return "", fmt.Errorf("post not found: %w", err)
-	}
-	if post == nil {
-		return "", errors.New("post not found")
-	}
-
-	enabled, err := s.commentRepo.CommentsEnabled(ctx, post.ID)
-	if err != nil {
-		return "", err
-	}
-	if !enabled {
-		return "", errors.New("comments are closed for this post")
-	}
-
-	ipHash := hashIP(r)
-	payload := tokenPayload{
-		PostID:   post.ID,
-		IPHash:   ipHash,
-		IssuedAt: time.Now().Unix(),
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal token payload: %w", err)
-	}
-
-	// Токен = UUID, значение = JSON, TTL = 15 мин
-	tokenID := uuid.NewString()
-	key := redisPrefix + tokenID
-
-	err = s.redis.Set(ctx, key, string(data), commentTokenTTL).Err()
-	if err != nil {
-		return "", fmt.Errorf("failed to store token in redis: %w", err)
-	}
-
-	return tokenID, nil
-}
-
 // =========== Создание комментария ===========
 
 func (s *commentService) CreateComment(
@@ -142,23 +64,10 @@ func (s *commentService) CreateComment(
 		return nil, err
 	}
 
-	// 3. Валидация и потребление токена (атомарно через GETDEL)
-	if token == "" {
-		return nil, errors.New("missing token")
-	}
-	key := redisPrefix + token
-
-	val, err := s.redis.GetDel(ctx, key).Result()
-	if err == redis.Nil {
-		return nil, errors.New("token is invalid or expired")
-	}
+	// 3. Валидация и потребление токена
+	payload, err := consumeToken(ctx, s.redis, token)
 	if err != nil {
-		return nil, fmt.Errorf("redis error: %w", err)
-	}
-
-	var payload tokenPayload
-	if err := json.Unmarshal([]byte(val), &payload); err != nil {
-		return nil, errors.New("invalid token")
+		return nil, err
 	}
 
 	// 4. Проверяем что прошло минимум 5 секунд (боты шлют мгновенно)
@@ -194,7 +103,6 @@ func (s *commentService) CreateComment(
 		if parent == nil || parent.PostID != data.PostID {
 			return nil, errors.New("invalid parent comment")
 		}
-		// Не допускаем вложенности глубже 1 уровня
 		if parent.ParentID != nil {
 			return nil, errors.New("max nesting level is 1")
 		}
@@ -209,8 +117,7 @@ func (s *commentService) CreateComment(
 	}
 
 	// 10. Создаём
-	ipHash := hashIP(r)
-	comment, err := s.commentRepo.Create(ctx, data, ipHash)
+	comment, err := s.commentRepo.Create(ctx, data, hashIP(r))
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +127,6 @@ func (s *commentService) CreateComment(
 		"post_id", data.PostID,
 		"status", comment.Status,
 	)
-
 	return comment, nil
 }
 
@@ -240,7 +146,6 @@ func (s *commentService) GetByPostID(ctx context.Context, postSlug string) ([]mo
 		return nil, 0, err
 	}
 
-	// Строим дерево (1 уровень)
 	return buildTree(comments), len(comments), nil
 }
 
@@ -271,89 +176,4 @@ func (s *commentService) Reject(ctx context.Context, id int64) error {
 
 func (s *commentService) Delete(ctx context.Context, id int64) error {
 	return s.commentRepo.Delete(ctx, id)
-}
-
-// =========== Вспомогательные ===========
-
-// hashIP — sha256 от IP. Сохраняем только хэш, не сам IP.
-func hashIP(r *http.Request) string {
-	ip := ""
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		ip = strings.TrimSpace(strings.Split(xff, ",")[0])
-	} else if xrip := r.Header.Get("X-Real-Ip"); xrip != "" {
-		ip = xrip
-	} else {
-		host, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err == nil {
-			ip = host
-		} else {
-			ip = r.RemoteAddr
-		}
-	}
-	h := sha256.Sum256([]byte(ip))
-	return hex.EncodeToString(h[:])
-}
-
-func validateCommentFields(d model.CommentCreateData) error {
-	name := strings.TrimSpace(d.AuthorName)
-	if name == "" {
-		return errors.New("name is required")
-	}
-	if len(name) < 2 || len(name) > 100 {
-		return errors.New("name must be between 2 and 100 characters")
-	}
-
-	content := strings.TrimSpace(d.Content)
-	if content == "" {
-		return errors.New("content is required")
-	}
-	if len(content) < 3 || len(content) > 5000 {
-		return errors.New("content must be between 3 and 5000 characters")
-	}
-
-	if d.AuthorEmail != nil && *d.AuthorEmail != "" {
-		email := strings.TrimSpace(*d.AuthorEmail)
-		emailRe := regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
-		if !emailRe.MatchString(email) {
-			return errors.New("invalid email format")
-		}
-	}
-
-	return nil
-}
-
-func containsForbidden(text string) bool {
-	lower := strings.ToLower(text)
-	for _, word := range forbiddenWords {
-		if strings.Contains(lower, word) {
-			return true
-		}
-	}
-	return false
-}
-
-// buildTree группирует плоский список в дерево с 1 уровнем вложенности.
-func buildTree(flat []model.Comment) []model.Comment {
-	byID := make(map[int64]*model.Comment, len(flat))
-	for i := range flat {
-		c := &flat[i]
-		c.Replies = nil
-		byID[c.ID] = c
-	}
-
-	var roots []model.Comment
-	for i := range flat {
-		c := &flat[i]
-		if c.ParentID == nil {
-			roots = append(roots, *c)
-		} else {
-			if parent, ok := byID[*c.ParentID]; ok {
-				parent.Replies = append(parent.Replies, *c)
-			} else {
-				// orphan — считаем корневым
-				roots = append(roots, *c)
-			}
-		}
-	}
-	return roots
 }
