@@ -1,130 +1,36 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PlateRenderer from "@/components/PlateRenderer";
-import { getPostBySlug, getCategories, type Category, type Post } from "@/lib/api";
+import {
+  getPostBySlug,
+  getCategories,
+  type Category,
+} from "@/lib/api";
 import type { PlateValue } from "@/lib/plate-types";
 import PostViewCounter from "@/components/PostViewCounter";
 import { getPostViews } from "@/lib/api/stats";
 import CommentList from "@/components/CommentList";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
 import { getPostBlocks } from "@/lib/api/blocks";
+import { buildPostMetadata } from "@/lib/seo/postMetadata";
+import { formatDate } from "@/lib/seo/format";
+import ArticleJsonLd from "@/components/seo/ArticleJsonLd";
+
 export const dynamic = "force-dynamic";
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("ru-RU", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function formatDateISO(dateString: string): string {
-  return new Date(dateString).toISOString();
-}
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
 
   if (!post) {
-    return {
-      title: "Статья не найдена",
-    };
+    return { title: "Статья не найдена" };
   }
 
-
-  const url = `https://svarg.net/posts/${post.slug}`;
-  const title = post.meta_title || post.title;
-  const description = post.meta_description || post.excerpt || post.title;
-  const keywords = post.meta_keywords && post.meta_keywords.length > 0
-    ? post.meta_keywords
-    : post.title.split(" ").filter((word) => word.length > 3);
-  const ogImage = post.og_image || "/og-image.png";
-
-  return {
-    title,
-    description,
-    keywords,
-    authors: [{ name: "SVARG_NET" }],
-    openGraph: {
-      type: "article",
-      locale: "ru_RU",
-      url,
-      title,
-      description,
-      siteName: "SVARG_NET",
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-      publishedTime: post.published_at
-        ? formatDateISO(post.published_at)
-        : undefined,
-      modifiedTime: formatDateISO(post.updated_at),
-      section: "Technology",
-      tags: post.meta_keywords || [],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImage],
-    },
-    alternates: {
-      canonical: url,
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
-}
-
-// JSON-LD разметка для поисковых систем
-function ArticleJsonLd({ post }: { post: Post }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    description: post.excerpt || post.title,
-    image: "https://svarg.net/og-image.png",
-    datePublished: post.published_at || post.created_at,
-    dateModified: post.updated_at,
-    author: {
-      "@type": "Person",
-      name: "SVARG_NET",
-      url: "https://svarg.net",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "SVARG_NET",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://svarg.net/logo.png",
-      },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `https://svarg.net/posts/${post.slug}`,
-    },
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-    />
-  );
+  return buildPostMetadata(post);
 }
 
 export default async function PostPage({ params }: Props) {
@@ -134,7 +40,7 @@ export default async function PostPage({ params }: Props) {
   if (!post) {
     notFound();
   }
-   // Получаем число просмотров
+
   let initialViews = 0;
   try {
     initialViews = await getPostViews(slug);
@@ -142,7 +48,6 @@ export default async function PostPage({ params }: Props) {
     // тихо игнорируем
   }
 
-  // Получаем категории и теги для отображения
   let categories: Category[] = [];
   try {
     const catResponse = await getCategories();
@@ -152,6 +57,10 @@ export default async function PostPage({ params }: Props) {
   }
 
   const postCategory = categories.find((c) => c.id === post.category_id);
+  const blocks =
+    post.content_mode === "blocks"
+      ? await getPostBlocks(post.slug)
+      : [];
 
   return (
     <>
@@ -169,7 +78,10 @@ export default async function PostPage({ params }: Props) {
                 {formatDate(post.published_at || post.created_at)}
               </time>
               <span style={{ marginLeft: "15px" }}>
-                <PostViewCounter slug={post.slug} initialViews={initialViews} />
+                <PostViewCounter
+                  slug={post.slug}
+                  initialViews={initialViews}
+                />
               </span>
               {postCategory && (
                 <span style={{ marginLeft: "15px" }}>
@@ -181,7 +93,14 @@ export default async function PostPage({ params }: Props) {
               )}
             </div>
             {post.tags && post.tags.length > 0 && (
-              <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginTop: "10px",
+                  flexWrap: "wrap",
+                }}
+              >
                 {post.tags.map((tag) => (
                   <Link
                     key={tag.id}
@@ -202,8 +121,8 @@ export default async function PostPage({ params }: Props) {
             )}
           </header>
 
-            {post.content_mode === "blocks" ? (
-            <BlockRenderer blocks={await getPostBlocks(post.slug)} />
+          {post.content_mode === "blocks" ? (
+            <BlockRenderer blocks={blocks} />
           ) : post.content_json && Array.isArray(post.content_json) ? (
             <PlateRenderer content={post.content_json as PlateValue} />
           ) : post.content_md ? (
@@ -212,6 +131,7 @@ export default async function PostPage({ params }: Props) {
             <p>Контент отсутствует</p>
           )}
         </article>
+
         <CommentList
           postId={post.id}
           postSlug={post.slug}

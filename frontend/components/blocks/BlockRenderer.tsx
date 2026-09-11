@@ -1,19 +1,23 @@
 import type {
   Block,
-  TextBlockData,
+  CalloutBlockData,
+  CodeBlockData,
+  DividerBlockData,
+  GalleryBlockData,
   ImageBlockData,
   ImageTextBlockData,
-  CodeBlockData,
-  GalleryBlockData,
   QuoteBlockData,
-  CalloutBlockData,
-  DividerBlockData,
+  TextBlockData,
 } from "@/lib/api/blocks";
-import { resolveImageSrc } from "@/lib/api/blocks";
-import PlateRenderer from "@/components/PlateRenderer";
-import CopyButton from "@/components/blocks/CopyButton";
+import TextBlock from "./render/TextBlock";
+import ImageBlock from "./render/ImageBlock";
+import ImageTextBlock from "./render/ImageTextBlock";
+import CodeBlock from "./render/CodeBlock";
+import QuoteBlock from "./render/QuoteBlock";
+import CalloutBlock from "./render/CalloutBlock";
+import DividerBlock from "./render/DividerBlock";
+import GalleryClient from "./GalleryClient";
 import "@/styles/blocks.css";
-import GalleryClient from "@/components/blocks/GalleryClient";
 
 type Props = {
   blocks: Block[];
@@ -22,7 +26,7 @@ type Props = {
 /**
  * Публичный рендерер блоков поста.
  * Server component: контент попадает в HTML для SEO.
- * Интерактив (копирование кода) вынесен в client-компоненты.
+ * Интерактив (лайтбокс, копирование) — в клиентских компонентах.
  */
 export default function BlockRenderer({ blocks }: Props) {
   if (!blocks || blocks.length === 0) return null;
@@ -47,7 +51,7 @@ function BlockView({ block }: { block: Block }) {
     case "code":
       return <CodeBlock data={block.data as CodeBlockData} />;
     case "gallery":
-      return <GalleryBlock data={block.data as GalleryBlockData} />;
+      return <GalleryClient data={block.data as GalleryBlockData} />;
     case "quote":
       return <QuoteBlock data={block.data as QuoteBlockData} />;
     case "callout":
@@ -55,121 +59,7 @@ function BlockView({ block }: { block: Block }) {
     case "divider":
       return <DividerBlock data={block.data as DividerBlockData} />;
     default:
-      // Неизвестный тип (например из волны 2) — молча пропускаем
+      // Неизвестный тип (волна 3) — молча пропускаем
       return null;
   }
-}
-
-// ===== text =====
-function TextBlock({ data }: { data: TextBlockData }) {
-  if (!data.content_json || data.content_json.length === 0) return null;
-  return (
-    <div className="block block-text">
-      <PlateRenderer content={data.content_json} />
-    </div>
-  );
-}
-
-// ===== image =====
-function ImageBlock({ data }: { data: ImageBlockData }) {
-  const src = resolveImageSrc(data);
-  if (!src) return null;
-  const align = data.align || "center";
-  return (
-    <figure className={`block block-image block-image--${align}`}>
-      <img src={src} alt={data.caption || ""} loading="lazy" />
-      {data.caption && <figcaption>{data.caption}</figcaption>}
-    </figure>
-  );
-}
-
-// ===== image-text =====
-function ImageTextBlock({ data }: { data: ImageTextBlockData }) {
-  const src = resolveImageSrc(data);
-  const layout = data.layout || "left";
-  return (
-    <div className={`block block-image-text block-image-text--${layout}`}>
-      {src && (
-        <div className="block-image-text-media">
-          <img src={src} alt={data.caption || ""} loading="lazy" />
-          {data.caption && <figcaption>{data.caption}</figcaption>}
-        </div>
-      )}
-      <div className="block-image-text-content">
-        {data.content_json && <PlateRenderer content={data.content_json} />}
-      </div>
-    </div>
-  );
-}
-
-// ===== code =====
-function CodeBlock({ data }: { data: CodeBlockData }) {
-  const code = data.code || "";
-  return (
-    <div className="block block-code">
-      <div className="block-code-header">
-        <span className="block-code-lang">
-          {data.filename || data.language || "code"}
-        </span>
-        <CopyButton text={code} />
-      </div>
-      <pre className="block-code-pre">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-// ===== gallery =====
-function GalleryBlock({ data }: { data: GalleryBlockData }) {
-  return <GalleryClient data={data} />;
-}
-
-// ===== quote =====
-function QuoteBlock({ data }: { data: QuoteBlockData }) {
-  if (!data.text) return null;
-  return (
-    <blockquote className="block block-quote">
-      <p>{data.text}</p>
-      {(data.author || data.source) && (
-        <cite>
-          {data.author}
-          {data.author && data.source ? " · " : ""}
-          {data.source}
-        </cite>
-      )}
-    </blockquote>
-  );
-}
-
-// ===== callout =====
-function CalloutBlock({ data }: { data: CalloutBlockData }) {
-  const type = data.type || "info";
-  const icons: Record<string, string> = {
-    info: "ℹ️",
-    warning: "⚠️",
-    error: "⛔",
-    success: "✅",
-  };
-  return (
-    <div className={`block block-callout block-callout--${type}`}>
-      <div className="block-callout-head">
-        <span className="block-callout-icon">{icons[type] || "ℹ️"}</span>
-        {data.title && <strong>{data.title}</strong>}
-      </div>
-      {data.text && <div className="block-callout-text">{data.text}</div>}
-    </div>
-  );
-}
-
-// ===== divider =====
-function DividerBlock({ data }: { data: DividerBlockData }) {
-  const style = data.style || "line";
-  if (style === "space") {
-    return <div className="block block-divider block-divider--space" />;
-  }
-  if (style === "dots") {
-    return <div className="block block-divider block-divider--dots">• • •</div>;
-  }
-  return <hr className="block block-divider block-divider--line" />;
 }
