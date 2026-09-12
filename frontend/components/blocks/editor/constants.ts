@@ -14,6 +14,9 @@ export const blockLabels: Record<string, string> = {
   quote: "📌 Цитата",
   callout: "📢 Callout",
   divider: "➗ Разделитель",
+  table: "📊 Таблица",
+  video: "🎬 Видео",
+  tabs: "🗂 Вкладки",
 };
 
 export type AddableBlock = {
@@ -71,5 +74,28 @@ export const addableBlocks: AddableBlock[] = [
     type: "divider",
     label: "Разделитель",
     defaultData: { style: "line" },
+  },
+    {
+    type: "table",
+    label: "Таблица",
+    defaultData: {
+      header: true,
+      rows: [
+        ["Колонка 1", "Колонка 2"],
+        ["", ""],
+      ],
+    },
+  },
+  {
+    type: "video",
+    label: "Видео",
+    defaultData: { url: "", provider: "", caption: "" },
+  },
+  {
+    type: "tabs",
+    label: "Вкладки",
+    defaultData: {
+      items: [{ title: "Вкладка 1", content_json: emptyPlate }],
+    },
   },
 ];

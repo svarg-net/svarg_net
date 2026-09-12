@@ -23,8 +23,16 @@ const (
 	BlockTypeDivider   = "divider"
 )
 
+// Типы блоков (волна 3)
+const (
+	BlockTypeTable = "table"
+	BlockTypeVideo = "video"
+	BlockTypeTabs  = "tabs"
+	BlockTypeQuiz  = "quiz"
+	BlockTypePoll  = "poll"
+)
+
 // AllowedBlockTypes — whitelist типов блоков.
-// Волна 2 добавит: table, video, embed, download, poll, quiz, tabs
 var AllowedBlockTypes = map[string]bool{
 	BlockTypeText:      true,
 	BlockTypeImage:     true,
@@ -34,6 +42,12 @@ var AllowedBlockTypes = map[string]bool{
 	BlockTypeQuote:     true,
 	BlockTypeCallout:   true,
 	BlockTypeDivider:   true,
+	// волна 3
+	BlockTypeTable: true,
+	BlockTypeVideo: true,
+	BlockTypeTabs:  true,
+	BlockTypeQuiz:  true,
+	BlockTypePoll:  true,
 }
 
 // Block — один блок поста.
