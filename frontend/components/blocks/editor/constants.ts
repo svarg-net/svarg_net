@@ -17,6 +17,7 @@ export const blockLabels: Record<string, string> = {
   table: "📊 Таблица",
   video: "🎬 Видео",
   tabs: "🗂 Вкладки",
+  quiz: "❓ Викторина",
 };
 
 export type AddableBlock = {
@@ -96,6 +97,16 @@ export const addableBlocks: AddableBlock[] = [
     label: "Вкладки",
     defaultData: {
       items: [{ title: "Вкладка 1", content_json: emptyPlate }],
+    },
+  },
+  {
+    type: "quiz",
+    label: "Викторина",
+    defaultData: {
+      question: "",
+      options: ["", ""],
+      correct_index: 0,
+      explanation: "",
     },
   },
 ];

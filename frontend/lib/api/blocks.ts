@@ -13,7 +13,9 @@ export type BlockType =
   | "divider"
   | "table"
   | "video"
-  | "tabs";
+  | "tabs"
+  | "quiz"
+  ;
 
 export type Block = {
   id: number;
@@ -95,6 +97,18 @@ export type TabsItem = {
 
 export type TabsBlockData = {
   items?: TabsItem[];
+};
+
+export type QuizQuestion = {
+  question?: string;
+  options?: string[];
+  correct_index?: number;
+  explanation?: string;
+};
+
+export type QuizBlockData = {
+  title?: string;
+  questions?: QuizQuestion[];
 };
 
 // ===== Хелперы =====

@@ -2,6 +2,7 @@
 import TableFields from "./fields/TableFields";
 import VideoFields from "./fields/VideoFields";
 import TabsFields from "./fields/TabsFields";
+import QuizFields from "./fields/QuizFields";
 import type {
   Block,
   CalloutBlockData,
@@ -14,7 +15,8 @@ import type {
   TextBlockData,
   TableBlockData,
   VideoBlockData,
-  TabsBlockData
+  TabsBlockData,
+  QuizBlockData,
 } from "@/lib/api/blocks";
 import TextFields from "./fields/TextFields";
 import {
@@ -111,6 +113,13 @@ export default function BlockFields({ block, onChange }: Props) {
       return (
         <TabsFields
           data={block.data as TabsBlockData}
+          onChange={onChange}
+        />
+      );
+    case "quiz":
+      return (
+        <QuizFields
+          data={block.data as QuizBlockData}
           onChange={onChange}
         />
       );

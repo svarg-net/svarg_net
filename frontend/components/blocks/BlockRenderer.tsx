@@ -10,7 +10,8 @@ import type {
   TextBlockData,
   TableBlockData,
   VideoBlockData,
-  TabsBlockData
+  TabsBlockData,
+  QuizBlockData
 } from "@/lib/api/blocks";
 import TextBlock from "./render/TextBlock";
 import ImageBlock from "./render/ImageBlock";
@@ -24,6 +25,7 @@ import TableBlock from "./render/TableBlock";
 import VideoBlock from "./render/VideoBlock";
 import TabsBlock from "./render/TabsBlock";
 import "@/styles/blocks.css";
+import QuizBlock from "./render/QuizBlock";
 
 type Props = {
   blocks: Block[];
@@ -70,6 +72,8 @@ function BlockView({ block }: { block: Block }) {
       return <VideoBlock data={block.data as VideoBlockData} />;
     case "tabs":
       return <TabsBlock data={block.data as TabsBlockData} />;
+    case "quiz":
+      return <QuizBlock data={block.data as QuizBlockData} />;
     default:
       // Неизвестный тип (волна 3) — молча пропускаем
       return null;

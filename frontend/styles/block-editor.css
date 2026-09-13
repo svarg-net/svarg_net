@@ -302,3 +302,62 @@
   flex: 1;
   font-weight: 600;
 }
+/* ===== Quiz-редактор: вложенные вопросы ===== */
+.quiz-editor-question {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.quiz-editor-question-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+.quiz-editor-question-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.quiz-editor-question-actions button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.quiz-editor-question-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.quiz-editor-options {
+  margin: 8px 0;
+}
+
+.quiz-editor-question textarea {
+  margin-top: 8px;
+  width: 100%;
+}
+.quiz-editor-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.quiz-editor-row input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2e7d32;
+}
+.quiz-editor-row input:not([type]) {
+  flex: 1;
+}
