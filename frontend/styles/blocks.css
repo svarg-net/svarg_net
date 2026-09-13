@@ -577,3 +577,83 @@
 .block-quiz-reset:hover {
   background: #f5f5f5;
 }
+
+/* --- poll --- */
+.block-poll {
+  margin: 1.5em 0;
+  padding: 20px 24px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background: #fcfcfc;
+}
+.block-poll-question {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.block-poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.block-poll-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.block-poll-option:hover { border-color: #999; }
+.block-poll-option.is-selected {
+  border-color: #1976d2;
+  background: #e3f2fd;
+}
+.block-poll-submit {
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.block-poll-submit:disabled {
+  background: #bbb;
+  cursor: not-allowed;
+}
+.block-poll-submit:hover:not(:disabled) { background: #1565c0; }
+.block-poll-error {
+  margin-bottom: 10px;
+  color: #c62828;
+  font-size: 14px;
+}
+.block-poll-result-row { margin-bottom: 12px; }
+.block-poll-result-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.block-poll-bar {
+  height: 10px;
+  background: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.block-poll-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1976d2, #64b5f6);
+  transition: width 0.3s ease;
+}
+.block-poll-total {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+}

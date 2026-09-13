@@ -26,6 +26,7 @@ import VideoBlock from "./render/VideoBlock";
 import TabsBlock from "./render/TabsBlock";
 import "@/styles/blocks.css";
 import QuizBlock from "./render/QuizBlock";
+import PollBlock from "./render/PollBlock";
 
 type Props = {
   blocks: Block[];
@@ -74,6 +75,8 @@ function BlockView({ block }: { block: Block }) {
       return <TabsBlock data={block.data as TabsBlockData} />;
     case "quiz":
       return <QuizBlock data={block.data as QuizBlockData} />;
+    case "poll":
+      return <PollBlock block={block} />;
     default:
       // Неизвестный тип (волна 3) — молча пропускаем
       return null;

@@ -3,6 +3,7 @@ import TableFields from "./fields/TableFields";
 import VideoFields from "./fields/VideoFields";
 import TabsFields from "./fields/TabsFields";
 import QuizFields from "./fields/QuizFields";
+import PollFields from "./fields/PollFields";
 import type {
   Block,
   CalloutBlockData,
@@ -17,6 +18,7 @@ import type {
   VideoBlockData,
   TabsBlockData,
   QuizBlockData,
+  PollBlockData,
 } from "@/lib/api/blocks";
 import TextFields from "./fields/TextFields";
 import {
@@ -123,6 +125,13 @@ export default function BlockFields({ block, onChange }: Props) {
           onChange={onChange}
         />
       );
+    case "poll":
+      return (
+        <PollFields
+          data={block.data as PollBlockData}
+          onChange={onChange}
+        />
+      );  
     default:
       return (
         <div style={{ color: "#888" }}>

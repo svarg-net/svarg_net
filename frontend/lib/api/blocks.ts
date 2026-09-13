@@ -15,6 +15,7 @@ export type BlockType =
   | "video"
   | "tabs"
   | "quiz"
+  | "poll"
   ;
 
 export type Block = {
@@ -111,6 +112,18 @@ export type QuizBlockData = {
   questions?: QuizQuestion[];
 };
 
+export type PollBlockData = {
+  question?: string;
+  options?: string[];
+  multiple?: boolean;
+};
+
+export type PollResults = {
+  counts: number[];
+  total: number;
+  voted: boolean;
+};
+
 // ===== Хелперы =====
 
 /** URL файла из медиабиблиотеки */
@@ -201,4 +214,29 @@ export async function reorderAdminBlocks(
 export async function convertPostToBlocks(postId: number): Promise<void> {
   const { apiPost } = await import("./client");
   await apiPost(`/api/v1/admin/posts/${postId}/convert-to-blocks`, {});
+}
+
+/** Результаты опроса (публично) */
+export async function getPollResults(blockId: number): Promise<PollResults> {
+  const res = await fetch(`/api/v1/blocks/${blockId}/poll`);
+  if (!res.ok) throw new Error("failed to load poll results");
+  return res.json();
+}
+
+/** Голосовать в опросе */
+export async function votePoll(
+  blockId: number,
+  optionIndexes: number[]
+): Promise<void> {
+  const res = await fetch(`/api/v1/blocks/${blockId}/vote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ option_indexes: optionIndexes }),
+  });
+  if (!res.ok) {
+    const err = await res
+      .json()
+      .catch(() => ({ error: "vote failed" }));
+    throw new Error(err.error || "vote failed");
+  }
 }

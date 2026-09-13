@@ -361,3 +361,13 @@
 .quiz-editor-row input:not([type]) {
   flex: 1;
 }
+/* ===== Опрос-редактор ===== */
+.poll-editor-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.poll-editor-row input:not([type]) {
+  flex: 1;
+}

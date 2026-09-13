@@ -27,6 +27,7 @@ type container struct {
 	statsHandler    *handler.StatsHandler
 	commentHandler  *handler.CommentHandler
 	blockHandler    *handler.BlockHandler
+	pollHandler     *handler.PollHandler
 
 	// Services
 	authService service.AuthService
@@ -57,6 +58,7 @@ func newContainer(
 	statsRepo := repository.NewStatsRepository(pool)
 	commentRepo := repository.NewCommentRepository(pool)
 	blockRepo := repository.NewBlockRepository(pool)
+	pollRepo := repository.NewPollRepository(pool)
 
 	// Services
 	postService := service.NewPostService(postRepo, tagRepo, log)
@@ -68,6 +70,7 @@ func newContainer(
 	statsService := service.NewStatsService(statsRepo)
 	commentService := service.NewCommentService(commentRepo, postRepo, redisClient, log)
 	blockService := service.NewBlockService(blockRepo, postRepo, log)
+	pollService := service.NewPollService(pollRepo, blockRepo)
 
 	// Handlers
 	return &container{
@@ -80,6 +83,7 @@ func newContainer(
 		statsHandler:    handler.NewStatsHandler(statsService, log),
 		commentHandler:  handler.NewCommentHandler(commentService, log),
 		blockHandler:    handler.NewBlockHandler(blockService, log),
+		pollHandler:     handler.NewPollHandler(pollService, log),
 		authService:     authService,
 		loginLimiter:    rateLimitMiddleware(newRateLimiterStore(rate.Every(time.Minute), 5)),
 		commentLimiter:  rateLimitMiddleware(newRateLimiterStore(rate.Every(2*time.Minute), 2)),
