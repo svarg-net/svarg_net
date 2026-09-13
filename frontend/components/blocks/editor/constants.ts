@@ -18,6 +18,7 @@ export const blockLabels: Record<string, string> = {
   video: "🎬 Видео",
   tabs: "🗂 Вкладки",
   quiz: "❓ Викторина",
+  poll: "🗳 Опрос",
 };
 
 export type AddableBlock = {
@@ -103,10 +104,20 @@ export const addableBlocks: AddableBlock[] = [
     type: "quiz",
     label: "Викторина",
     defaultData: {
-      question: "",
-      options: ["", ""],
-      correct_index: 0,
-      explanation: "",
+      title: "",
+      questions: [
+        {
+          question: "",
+          options: ["", ""],
+          correct_index: 0,
+          explanation: "",
+        },
+      ],
     },
+  },
+  {
+    type: "poll",
+    label: "Опрос",
+    defaultData: { question: "", options: ["", ""], multiple: false },
   },
 ];
