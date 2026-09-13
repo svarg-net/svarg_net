@@ -44,6 +44,7 @@ const nextConfig: NextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",
+              "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
             ].join("; "),
           },
           ...baseHeaders,

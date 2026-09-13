@@ -10,7 +10,12 @@ export type BlockType =
   | "gallery"
   | "quote"
   | "callout"
-  | "divider";
+  | "divider"
+  | "table"
+  | "video"
+  | "tabs"
+  | "quiz"
+  ;
 
 export type Block = {
   id: number;
@@ -72,6 +77,38 @@ export type CalloutBlockData = {
 
 export type DividerBlockData = {
   style?: "line" | "dots" | "space";
+};
+
+export type TableBlockData = {
+  header?: boolean;
+  rows?: string[][];
+};
+
+export type VideoBlockData = {
+  url?: string;
+  provider?: string;
+  caption?: string;
+};
+
+export type TabsItem = {
+  title?: string;
+  content_json?: PlateValue;
+};
+
+export type TabsBlockData = {
+  items?: TabsItem[];
+};
+
+export type QuizQuestion = {
+  question?: string;
+  options?: string[];
+  correct_index?: number;
+  explanation?: string;
+};
+
+export type QuizBlockData = {
+  title?: string;
+  questions?: QuizQuestion[];
 };
 
 // ===== Хелперы =====

@@ -1,5 +1,8 @@
 "use client";
-
+import TableFields from "./fields/TableFields";
+import VideoFields from "./fields/VideoFields";
+import TabsFields from "./fields/TabsFields";
+import QuizFields from "./fields/QuizFields";
 import type {
   Block,
   CalloutBlockData,
@@ -10,6 +13,10 @@ import type {
   ImageTextBlockData,
   QuoteBlockData,
   TextBlockData,
+  TableBlockData,
+  VideoBlockData,
+  TabsBlockData,
+  QuizBlockData,
 } from "@/lib/api/blocks";
 import TextFields from "./fields/TextFields";
 import {
@@ -85,6 +92,34 @@ export default function BlockFields({ block, onChange }: Props) {
       return (
         <GalleryFields
           data={block.data as GalleryBlockData}
+          onChange={onChange}
+        />
+      );
+    case "table":
+      return (
+        <TableFields
+          data={block.data as TableBlockData}
+          onChange={onChange}
+        />
+      );
+    case "video":
+      return (
+        <VideoFields
+          data={block.data as VideoBlockData}
+          onChange={onChange}
+        />
+      );
+    case "tabs":
+      return (
+        <TabsFields
+          data={block.data as TabsBlockData}
+          onChange={onChange}
+        />
+      );
+    case "quiz":
+      return (
+        <QuizFields
+          data={block.data as QuizBlockData}
           onChange={onChange}
         />
       );

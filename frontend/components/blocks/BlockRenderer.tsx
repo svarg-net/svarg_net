@@ -8,6 +8,10 @@ import type {
   ImageTextBlockData,
   QuoteBlockData,
   TextBlockData,
+  TableBlockData,
+  VideoBlockData,
+  TabsBlockData,
+  QuizBlockData
 } from "@/lib/api/blocks";
 import TextBlock from "./render/TextBlock";
 import ImageBlock from "./render/ImageBlock";
@@ -17,7 +21,11 @@ import QuoteBlock from "./render/QuoteBlock";
 import CalloutBlock from "./render/CalloutBlock";
 import DividerBlock from "./render/DividerBlock";
 import GalleryClient from "./GalleryClient";
+import TableBlock from "./render/TableBlock";
+import VideoBlock from "./render/VideoBlock";
+import TabsBlock from "./render/TabsBlock";
 import "@/styles/blocks.css";
+import QuizBlock from "./render/QuizBlock";
 
 type Props = {
   blocks: Block[];
@@ -58,6 +66,14 @@ function BlockView({ block }: { block: Block }) {
       return <CalloutBlock data={block.data as CalloutBlockData} />;
     case "divider":
       return <DividerBlock data={block.data as DividerBlockData} />;
+    case "table":
+      return <TableBlock data={block.data as TableBlockData} />;
+    case "video":
+      return <VideoBlock data={block.data as VideoBlockData} />;
+    case "tabs":
+      return <TabsBlock data={block.data as TabsBlockData} />;
+    case "quiz":
+      return <QuizBlock data={block.data as QuizBlockData} />;
     default:
       // Неизвестный тип (волна 3) — молча пропускаем
       return null;

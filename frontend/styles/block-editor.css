@@ -229,3 +229,135 @@
   padding: 2px 8px;
   background: #fff;
 }
+
+/* ===== Таблица-редактор ===== */
+.table-editor {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+.table-editor-row {
+  display: flex;
+  border-bottom: 1px solid #eee;
+}
+
+.table-editor-row:last-child {
+  border-bottom: none;
+}
+
+.table-editor-row input {
+  flex: 1;
+  min-width: 100px;
+  border: none;
+  border-right: 1px solid #eee;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.table-editor-row input:last-child {
+  border-right: none;
+}
+
+.table-editor-row input:focus {
+  outline: 2px solid #111;
+  outline-offset: -2px;
+}
+
+.table-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.table-editor-actions button {
+  padding: 5px 12px;
+  font-size: 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.table-editor-actions button:hover {
+  background: #eee;
+}
+
+/* ===== Вкладки-редактор ===== */
+.tabs-editor-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.tabs-editor-head {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tabs-editor-head input {
+  flex: 1;
+  font-weight: 600;
+}
+/* ===== Quiz-редактор: вложенные вопросы ===== */
+.quiz-editor-question {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.quiz-editor-question-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+.quiz-editor-question-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.quiz-editor-question-actions button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.quiz-editor-question-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.quiz-editor-options {
+  margin: 8px 0;
+}
+
+.quiz-editor-question textarea {
+  margin-top: 8px;
+  width: 100%;
+}
+.quiz-editor-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.quiz-editor-row input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2e7d32;
+}
+.quiz-editor-row input:not([type]) {
+  flex: 1;
+}
