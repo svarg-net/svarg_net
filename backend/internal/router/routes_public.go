@@ -41,4 +41,8 @@ func registerPublicRoutes(mux *http.ServeMux, c *container, pool *pgxpool.Pool) 
 
 	// Блоки (публично)
 	mux.HandleFunc("GET /api/v1/posts/{slug}/blocks", c.blockHandler.ListPublic)
+
+	// Опросы (публичные)
+	mux.Handle("POST /api/v1/blocks/{id}/vote", c.commentLimiter(http.HandlerFunc(c.pollHandler.Vote)))
+	mux.HandleFunc("GET /api/v1/blocks/{id}/poll", c.pollHandler.Results)
 }
