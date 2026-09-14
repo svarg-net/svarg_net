@@ -66,3 +66,15 @@ func (h *PollHandler) Results(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(results)
 }
+
+func (h *PollHandler) ListAdmin(w http.ResponseWriter, r *http.Request) {
+	items, err := h.pollService.ListAdmin(r.Context())
+	if err != nil {
+		h.log.Error("failed to list polls", "error", err)
+		writePollError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"items": items})
+}

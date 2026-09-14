@@ -1,15 +1,33 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { PollBlockData } from "@/lib/api/blocks";
+import { apiGet } from "@/lib/api/client";
 
 type Props = {
+  blockId?: number;
   data: PollBlockData;
   onChange: (data: Record<string, unknown>) => void;
 };
 
-export default function PollFields({ data, onChange }: Props) {
+type PollResults = {
+  counts: number[];
+  total: number;
+  voted: boolean;
+};
+
+export default function PollFields({ blockId, data, onChange }: Props) {
   const options =
     data.options && data.options.length > 0 ? data.options : ["", ""];
+
+  const [results, setResults] = useState<PollResults | null>(null);
+
+  useEffect(() => {
+    if (!blockId) return;
+    apiGet<PollResults>(`/api/v1/blocks/${blockId}/poll`)
+      .then(setResults)
+      .catch(() => setResults(null));
+  }, [blockId]);
 
   const setOptions = (next: string[]) =>
     onChange({ ...data, options: next });
@@ -20,6 +38,8 @@ export default function PollFields({ data, onChange }: Props) {
     if (options.length <= 2) return;
     setOptions(options.filter((_, idx) => idx !== i));
   };
+
+  const total = results?.total ?? 0;
 
   return (
     <>
@@ -72,6 +92,33 @@ export default function PollFields({ data, onChange }: Props) {
           + Добавить вариант
         </button>
       </div>
+
+      {/* Inline-сводка результатов */}
+      {blockId && results && total > 0 && (
+        <div className="block-editor-field poll-editor-summary">
+          <label>Результаты ({total} голосов)</label>
+          {options.map((opt, i) => {
+            const count = results.counts[i] || 0;
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            return (
+              <div key={i} className="poll-editor-summary-row">
+                <div className="poll-editor-summary-label">
+                  <span>{opt || <em>(пусто)</em>}</span>
+                  <span>
+                    {count} ({pct}%)
+                  </span>
+                </div>
+                <div className="poll-editor-summary-bar">
+                  <div
+                    className="poll-editor-summary-bar-fill"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }
