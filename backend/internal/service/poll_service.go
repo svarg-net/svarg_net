@@ -20,6 +20,7 @@ type PollResults struct {
 type PollService interface {
 	Vote(ctx context.Context, blockID int64, optionIndexes []int, r *http.Request) error
 	Results(ctx context.Context, blockID int64, r *http.Request) (*PollResults, error)
+	ListAdmin(ctx context.Context) ([]model.AdminPollItem, error)
 }
 
 type pollService struct {
@@ -114,4 +115,51 @@ func (s *pollService) Results(ctx context.Context, blockID int64, r *http.Reques
 	}
 
 	return &PollResults{Counts: counts, Total: total, Voted: voted}, nil
+}
+
+func (s *pollService) ListAdmin(ctx context.Context) ([]model.AdminPollItem, error) {
+	rows, err := s.pollRepo.ListPollBlocks(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	optCounts, err := s.pollRepo.AllOptionCounts(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	totals, err := s.pollRepo.AllTotals(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]model.AdminPollItem, 0, len(rows))
+	for _, row := range rows {
+		var data struct {
+			Question string   `json:"question"`
+			Options  []string `json:"options"`
+			Multiple bool     `json:"multiple"`
+		}
+		if err := json.Unmarshal(row.Data, &data); err != nil {
+			continue
+		}
+
+		counts := make([]int, len(data.Options))
+		for i := range counts {
+			counts[i] = optCounts[row.BlockID][i]
+		}
+
+		items = append(items, model.AdminPollItem{
+			BlockID:   row.BlockID,
+			PostID:    row.PostID,
+			PostTitle: row.PostTitle,
+			PostSlug:  row.PostSlug,
+			Question:  data.Question,
+			Options:   data.Options,
+			Multiple:  data.Multiple,
+			Counts:    counts,
+			Total:     totals[row.BlockID],
+		})
+	}
+	return items, nil
 }

@@ -128,6 +128,7 @@ export default function BlockFields({ block, onChange }: Props) {
     case "poll":
       return (
         <PollFields
+          blockId={block.id}
           data={block.data as PollBlockData}
           onChange={onChange}
         />

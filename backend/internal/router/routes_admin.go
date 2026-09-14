@@ -49,6 +49,9 @@ func registerAdminRoutes(mux *http.ServeMux, c *container) {
 	protectedMux.HandleFunc("PATCH /api/v1/admin/blocks/{id}", c.blockHandler.Update)
 	protectedMux.HandleFunc("DELETE /api/v1/admin/blocks/{id}", c.blockHandler.Delete)
 
+	// Опросы (админ-сводка)
+	protectedMux.HandleFunc("GET /api/v1/admin/polls", c.pollHandler.ListAdmin)
+
 	// Применяем auth middleware
 	var protectedHandler http.Handler = protectedMux
 	protectedHandler = authMiddleware(protectedHandler, c.authService, c.log)
@@ -79,4 +82,5 @@ func registerAdminRoutes(mux *http.ServeMux, c *container) {
 	mux.Handle("POST /api/v1/admin/posts/{id}/convert-to-blocks", protectedHandler)
 	mux.Handle("PATCH /api/v1/admin/blocks/{id}", protectedHandler)
 	mux.Handle("DELETE /api/v1/admin/blocks/{id}", protectedHandler)
+	mux.Handle("GET /api/v1/admin/polls", protectedHandler)
 }

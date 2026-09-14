@@ -33,6 +33,12 @@ const ADMIN_LINKS = [
     title: "Статистика",
     description: "Просмотры постов и аналитика",
   },
+  {
+    href: "/admin/polls",
+    icon: "🗳",
+    title: "Опросы",
+    description: "Результаты голосований в блоках",
+  },
 ];
 
 export default function AdminHomePage() {
