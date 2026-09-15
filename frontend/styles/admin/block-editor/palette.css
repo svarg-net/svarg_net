@@ -1,0 +1,212 @@
+/* ===== Layout редактора: палитра + контент ===== */
+.block-editor-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.block-editor-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== Sticky-палитра слева ===== */
+.block-palette {
+  flex: 0 0 200px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.block-palette-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.block-palette-hint {
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.block-palette button {
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.block-palette button:hover:not(:disabled) {
+  border-color: #1976d2;
+  background: #f0f7ff;
+}
+
+.block-palette button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.block-palette-reset {
+  margin-top: 6px;
+  border-style: dashed !important;
+  color: #c62828;
+}
+
+/* ===== Дроп-зоны между блоками ===== */
+.block-dropzone {
+  position: relative;
+  height: 16px;
+  margin: 2px 0;
+}
+
+.block-dropzone-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.block-dropzone-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: transparent;
+  border-radius: 1px;
+  transition: background 0.15s;
+}
+
+.block-dropzone-line:hover::before,
+.block-dropzone.is-active .block-dropzone-line::before {
+  background: #1976d2;
+}
+
+.block-dropzone-plus {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1976d2;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.block-dropzone-line:hover .block-dropzone-plus,
+.block-dropzone.is-active .block-dropzone-plus {
+  display: flex;
+}
+
+/* Мини-палитра в активной дроп-зоне */
+.block-dropzone.is-active {
+  height: auto;
+  margin: 6px 0;
+}
+
+.block-dropzone-palette {
+  background: #f0f7ff;
+  border: 1px dashed #90caf9;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.block-dropzone-palette button {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.block-dropzone-palette button:hover:not(:disabled) {
+  border-color: #1976d2;
+}
+
+.block-dropzone-cancel {
+  border-style: dashed !important;
+  color: #c62828;
+}
+
+/* ===== Адаптив ===== */
+@media (max-width: 900px) {
+  .block-editor-layout {
+    flex-direction: column;
+  }
+  .block-palette {
+    position: static;
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .block-palette-title,
+  .block-palette-hint {
+    width: 100%;
+  }
+  .block-palette button {
+    flex: 1 1 auto;
+  }
+}
+
+/* ===== Drag из палитры ===== */
+.block-palette-item {
+  cursor: grab;
+}
+
+.block-palette-item.is-dragging {
+  opacity: 0.4;
+}
+
+.block-drag-chip {
+  padding: 8px 14px;
+  background: #1976d2;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: grabbing;
+  white-space: nowrap;
+}
+
+/* Зелёная подсветка зоны, над которой держим новый блок */
+.block-dropzone.is-over .block-dropzone-line::before {
+  background: #2e7d32;
+  height: 3px;
+}
+
+.block-dropzone.is-over .block-dropzone-plus {
+  display: flex;
+  background: #2e7d32;
+}

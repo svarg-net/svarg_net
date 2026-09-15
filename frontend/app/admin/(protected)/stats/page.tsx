@@ -43,19 +43,10 @@ export default function StatsPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>📊 Статистика просмотров</h1>
-        <div className="admin-nav">
-          <Link href="/">На сайт</Link>
-        </div>
-      </div>
+      <h1>Статистика</h1>
 
       <div className="stats-page">
         <div className="stats-toolbar">
-          <Link href="/admin" className="stats-back-link">
-            ← Назад к панели
-          </Link>
-
           <div className="stats-period-switcher">
             {PERIODS.map((p) => (
               <button

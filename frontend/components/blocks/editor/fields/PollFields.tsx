@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { PollBlockData } from "@/lib/api/blocks";
 import { apiGet } from "@/lib/api/client";
+import "@/styles/admin/polls.css";
 
 type Props = {
   blockId?: number;
