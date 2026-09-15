@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getPosts, type Post } from "@/lib/api";
 import PostForm from "@/components/PostForm";
@@ -64,12 +63,6 @@ export default function EditPostPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>Редактирование поста</h1>
-        <div className="admin-nav">
-          <Link href="/admin/posts">Назад к списку</Link>
-        </div>
-      </div>
       <PostForm mode="edit" post={post} />
     </div>
   );

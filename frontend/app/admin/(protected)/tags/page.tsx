@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   getTags,
   createTag,
   deleteTag,
   type Tag,
 } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
-import AdminNav from "@/components/AdminNav";
 
 export default function AdminTagsPage() {
-  const router = useRouter();
-  const { logout } = useAuth();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -83,11 +77,6 @@ export default function AdminTagsPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/admin/login");
-  };
-
   if (loading) {
     return (
       <div className="admin-container">
@@ -98,18 +87,7 @@ export default function AdminTagsPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>Управление тегами</h1>
-        <div className="admin-nav">
-          <Link href="/">На сайт</Link>
-          <button onClick={handleLogout} className="btn btn-secondary">
-            Выйти
-          </button>
-        </div>
-      </div>
-
-      <AdminNav />
-
+      <h1>Теги</h1>
       {error && <div className="error-message">{error}</div>}
 
       {!showForm && (

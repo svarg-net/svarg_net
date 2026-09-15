@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   approveComment,
@@ -71,13 +70,7 @@ export default function AdminCommentsPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>💬 Очередь модерации</h1>
-        <div className="admin-nav">
-          <Link href="/">На сайт</Link>
-        </div>
-      </div>
-
+      <h1>Комментарии на модерации</h1>
       {error && <div className="error-message">Ошибка: {error}</div>}
       {loading && <p>Загрузка...</p>}
 

@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   getCategories,
   createCategory,
@@ -10,12 +8,8 @@ import {
   deleteCategory,
   type Category,
 } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
-import AdminNav from "@/components/AdminNav";
 
 export default function AdminCategoriesPage() {
-  const router = useRouter();
-  const { logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -109,11 +103,6 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/admin/login");
-  };
-
   if (loading) {
     return (
       <div className="admin-container">
@@ -124,18 +113,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>Управление категориями</h1>
-        <div className="admin-nav">
-          <Link href="/">На сайт</Link>
-          <button onClick={handleLogout} className="btn btn-secondary">
-            Выйти
-          </button>
-        </div>
-      </div>
-
-      <AdminNav />
-
+      <h1>Категории</h1>
       {error && <div className="error-message">{error}</div>}
 
       {!showForm && (
