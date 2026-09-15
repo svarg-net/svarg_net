@@ -1,0 +1,109 @@
+/* ===== Layout админки: контент + правый сайдбар ===== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 24px 32px;
+  max-width: 1400px;
+  min-width: 0;
+}
+
+.admin-sidebar {
+  flex: 0 0 240px;
+  background: #fff;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-sidebar-brand {
+  padding: 20px 18px;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+}
+
+.admin-sidebar-brand a {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.admin-sidebar-brand a:hover {
+  color: #1976d2;
+}
+
+.admin-sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-nav-item:hover {
+  background: #f0f4fa;
+}
+
+.admin-nav-item.is-active {
+  background: #1976d2;
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.admin-sidebar-footer {
+  padding: 12px 8px;
+  border-top: 1px solid #eee;
+}
+
+.admin-logout {
+  color: #c62828;
+}
+
+.admin-logout:hover {
+  background: #ffebee;
+}
+
+/* Адаптив */
+@media (max-width: 900px) {
+  .admin-layout { flex-direction: column; }
+  .admin-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e5e5;
+    flex: 0 0 auto;
+  }
+  .admin-sidebar-nav { flex-direction: row; flex-wrap: wrap; }
+  .admin-nav-item { flex: 1 1 auto; min-width: 120px; }
+}

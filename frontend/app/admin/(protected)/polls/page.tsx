@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiGet } from "@/lib/api/client";
+import "@/styles/admin/polls.css";
 
 type PollItem = {
   block_id: number;
@@ -30,11 +31,7 @@ export default function PollsPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>🗳 Опросы</h1>
-        <Link href="/admin" className="btn-secondary">← Назад</Link>
-      </div>
-
+      <h1>Опросы</h1>
       {loading && <p>Загрузка...</p>}
       {error && <p className="error">Ошибка: {error}</p>}
 

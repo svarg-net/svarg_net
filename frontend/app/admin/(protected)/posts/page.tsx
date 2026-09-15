@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { getPosts, deletePost, type Post } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
-import AdminNav from "@/components/AdminNav";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -17,8 +14,6 @@ function formatDate(dateString: string): string {
 }
 
 export default function AdminPostsPage() {
-  const router = useRouter();
-  const { logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,11 +46,6 @@ export default function AdminPostsPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/admin/login");
-  };
-
   if (loading) {
     return (
       <div className="admin-container">
@@ -66,16 +56,6 @@ export default function AdminPostsPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <AdminNav />
-        <h1>Управление постами</h1>
-        <div className="admin-nav">
-          <Link href="/">На сайт</Link>
-          <button onClick={handleLogout} className="btn btn-secondary">
-            Выйти
-          </button>
-        </div>
-      </div>
 
       {error && <div className="error-message">{error}</div>}
 

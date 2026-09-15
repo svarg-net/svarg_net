@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
 import {
   getMedia,
   uploadMedia,
@@ -9,11 +8,8 @@ import {
   formatFileSize,
   type MediaFile,
 } from "@/lib/api/media";
-import { useAuth } from "@/context/AuthContext";
-import AdminNav from "@/components/AdminNav";
 
 export default function AdminMediaPage() {
-  const { logout: authLogout } = useAuth();
   const [media, setMedia] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -80,11 +76,6 @@ export default function AdminMediaPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await authLogout();
-    window.location.href = "/admin/login";
-  };
-
   const copyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
     alert("URL скопирован: " + url);
@@ -100,18 +91,7 @@ export default function AdminMediaPage() {
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <h1>Медиабиблиотека</h1>
-        <div className="admin-nav">
-          <Link href="/">На сайт</Link>
-          <button onClick={handleLogout} className="btn btn-secondary">
-            Выйти
-          </button>
-        </div>
-      </div>
-
-      <AdminNav />
-
+      <h1>Медиа</h1>
       {error && <div className="error-message">{error}</div>}
 
       {/* Drop zone */}
