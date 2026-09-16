@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"svarg_net/internal/logger"
+	"svarg_net/internal/model"
 	"svarg_net/internal/service"
 )
 
@@ -108,6 +109,23 @@ func authMiddleware(next http.Handler, authService service.AuthService, log logg
 		// Добавляем пользователя в контекст
 		ctx := context.WithValue(r.Context(), "user", user)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// requireAdmin пропускает только пользователей с ролью admin
+func requireAdmin(next http.Handler, log logger.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value("user").(*model.User)
+		if !ok || user.Role != model.RoleAdmin {
+			log.Warn("non-admin access attempt", "path", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"error": "admin access required",
+			})
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

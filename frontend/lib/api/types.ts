@@ -6,6 +6,7 @@ export type User = {
   id: number;
   email: string;
   username: string;
+  role: "admin" | "student";
   display_name?: string;
 };
 
