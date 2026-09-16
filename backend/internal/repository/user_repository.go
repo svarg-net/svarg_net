@@ -14,6 +14,7 @@ import (
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	GetByID(ctx context.Context, id int64) (*model.User, error)
+	Create(ctx context.Context, user *model.User) error
 }
 
 type userRepository struct {
@@ -27,7 +28,7 @@ func NewUserRepository(pool *pgxpool.Pool) UserRepository {
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := `
-		SELECT id, email, username, password_hash, display_name, created_at, updated_at
+		SELECT id, email, username, password_hash, display_name, role, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -35,7 +36,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.U
 	var user model.User
 	err := r.pool.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.DisplayName, &user.CreatedAt, &user.UpdatedAt,
+		&user.DisplayName, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -50,7 +51,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.U
 
 func (r *userRepository) GetByID(ctx context.Context, id int64) (*model.User, error) {
 	query := `
-		SELECT id, email, username, password_hash, display_name, created_at, updated_at
+		SELECT id, email, username, password_hash, display_name, role, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -58,7 +59,7 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*model.User, er
 	var user model.User
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.Username, &user.PasswordHash,
-		&user.DisplayName, &user.CreatedAt, &user.UpdatedAt,
+		&user.DisplayName, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -69,4 +70,19 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*model.User, er
 	}
 
 	return &user, nil
+}
+
+func (r *userRepository) Create(ctx context.Context, user *model.User) error {
+	query := `
+		INSERT INTO users (email, username, password_hash, display_name, role)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, updated_at
+	`
+	err := r.pool.QueryRow(ctx, query,
+		user.Email, user.Username, user.PasswordHash, user.DisplayName, user.Role,
+	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+	return nil
 }

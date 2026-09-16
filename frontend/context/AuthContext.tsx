@@ -18,29 +18,19 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-/**
- * Провайдер аутентификации.
- * Оборачивает приложение (или его часть) для обеспечения:
- * - Silent refresh при загрузке страницы (восстановление сессии из httpOnly cookie)
- * - Глобального доступа к текущему пользователю
- * - Функций login/logout
- */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Silent refresh при первой загрузке компонента
   useEffect(() => {
     const init = async () => {
       try {
-        // Пытаемся восстановить сессию используя httpOnly cookie
         const result = await silentRefresh();
         if (result) {
           setUser(result.user);
         }
       } catch {
-        // Сессии нет — это нормально для неавторизованного пользователя
-        // No active session — normal for unauthenticated user
+        // No active session
       } finally {
         setIsLoading(false);
       }
@@ -74,10 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * Хук для доступа к состоянию аутентификации.
- * Должен использоваться внутри AuthProvider.
- */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

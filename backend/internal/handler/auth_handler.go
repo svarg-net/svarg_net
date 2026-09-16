@@ -151,3 +151,22 @@ func (h *AuthHandler) respondError(w http.ResponseWriter, status int, message st
 		"error": message,
 	})
 }
+
+// Register POST /api/v1/auth/register
+// Создаёт студента и устанавливает refresh cookie
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var req model.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	loginResp, refreshToken, err := h.authService.Register(r.Context(), &req)
+	if err != nil {
+		h.respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	h.setRefreshCookie(w, refreshToken)
+	h.respondJSON(w, http.StatusCreated, loginResp)
+}

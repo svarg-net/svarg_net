@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,6 +21,7 @@ type AuthService interface {
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.LoginResponse, string, error)
 	RevokeRefreshToken(ctx context.Context, refreshToken string) error
 	RevokeAllUserTokens(ctx context.Context, userID int64) error
+	Register(ctx context.Context, req *model.RegisterRequest) (*model.LoginResponse, string, error)
 }
 
 type authService struct {
@@ -149,4 +151,52 @@ func (s *authService) GetUserByToken(ctx context.Context, tokenString string) (*
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 	return user, nil
+}
+
+// Register создаёт студента и сразу выдаёт пару токенов
+func (s *authService) Register(ctx context.Context, req *model.RegisterRequest) (*model.LoginResponse, string, error) {
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
+		return nil, "", fmt.Errorf("invalid email")
+	}
+	if len(req.Password) < 8 {
+		return nil, "", fmt.Errorf("password must be at least 8 characters")
+	}
+
+	if _, err := s.userRepo.GetByEmail(ctx, email); err == nil {
+		return nil, "", fmt.Errorf("user with this email already exists")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	local := email
+	if i := strings.Index(local, "@"); i > 0 {
+		local = local[:i]
+	}
+
+	user := &model.User{
+		Email:        email,
+		Username:     local,
+		PasswordHash: string(hash),
+		DisplayName:  req.Name,
+		Role:         model.RoleStudent,
+	}
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		// username занят — пробуем с суффиксом
+		user.Username = fmt.Sprintf("%s-%d", local, time.Now().Unix()%1000000)
+		if err2 := s.userRepo.Create(ctx, user); err2 != nil {
+			return nil, "", fmt.Errorf("failed to create user: %w", err2)
+		}
+	}
+
+	loginResp, refreshToken, err := s.generateTokenPair(ctx, user)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to generate tokens: %w", err)
+	}
+
+	s.log.Info("user registered", "user_id", user.ID, "email", user.Email)
+	return loginResp, refreshToken, nil
 }
