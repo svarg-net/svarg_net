@@ -2,11 +2,18 @@ package model
 
 import "time"
 
+// Роли пользователей
+const (
+	RoleAdmin   = "admin"
+	RoleStudent = "student"
+)
+
 // User модель пользователя
 type User struct {
 	ID           int64     `json:"id"`
 	Email        string    `json:"email"`
 	Username     string    `json:"username"`
+	Role         string    `json:"role"`
 	PasswordHash string    `json:"-"` // не сериализуем в JSON
 	DisplayName  string    `json:"display_name,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -17,6 +24,13 @@ type User struct {
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+// RegisterRequest запрос на регистрацию студента
+type RegisterRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name,omitempty"`
 }
 
 // LoginResponse ответ на вход (только access token, refresh идёт в httpOnly cookie)

@@ -1,47 +1,44 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-type RequireAuthProps = {
+type Props = {
   children: React.ReactNode;
+  requiredRole?: "admin" | "student";
   redirectTo?: string;
 };
 
-/**
- * Компонент-обёртка для защиты админских страниц.
- * - Пока идёт проверка сессии — показывает "Загрузка..."
- * - Если сессии нет — редиректит на страницу логина
- * - Если сессия есть — рендерит дочерние компоненты
- */
 export default function RequireAuth({
   children,
-  redirectTo = "/admin/login",
-}: RequireAuthProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  requiredRole,
+  redirectTo = "/login",
+}: Props) {
+  const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
-    // Не делаем редирект если уже на странице логина
-    if (!isLoading && !isAuthenticated && pathname !== redirectTo) {
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
+      router.push(redirectTo);
+      return;
+    }
+
+    if (requiredRole && user?.role !== requiredRole) {
       router.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, router, pathname, redirectTo]);
+  }, [isLoading, isAuthenticated, user, requiredRole, router, redirectTo]);
 
   if (isLoading) {
     return (
-      <div className="admin-container">
-        <p>Загрузка сессии...</p>
-      </div>
+      <div style={{ padding: "40px", textAlign: "center" }}>Загрузка...</div>
     );
   }
 
-  if (!isAuthenticated) {
-    // Во время редиректа ничего не показываем
-    return null;
-  }
+  if (!isAuthenticated) return null;
+  if (requiredRole && user?.role !== requiredRole) return null;
 
   return <>{children}</>;
 }

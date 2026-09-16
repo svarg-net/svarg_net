@@ -9,7 +9,7 @@ export default function ProtectedAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RequireAuth>
+    <RequireAuth requiredRole="admin" redirectTo="/">
       <div className="admin-layout">
         <AdminSidebar />
         <main className="admin-main">{children}</main>
