@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { TabsBlockData } from "@/lib/api/blocks";
-import PlateRenderer from "@/components/PlateRenderer";
+import type { TabsBlockData } from "@/lib/api/public/blocks";
+import PlateRenderer from "@/components/site/PlateRenderer";
 
 export default function TabsBlock({ data }: { data: TabsBlockData }) {
   const items = data.items || [];

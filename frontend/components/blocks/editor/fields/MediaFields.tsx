@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import MediaPicker from "@/components/MediaPicker";
-import PlateEditor from "@/components/PlateEditor";
+import MediaPicker from "@/components/common/MediaPicker";
+import PlateEditor from "@/components/site/PlateEditor";
 import type { MediaFile } from "@/lib/api";
 import type {
   GalleryBlockData,
   ImageBlockData,
   ImageTextBlockData,
-} from "@/lib/api/blocks";
+} from "@/lib/api/public/blocks";
 import { emptyPlate } from "../constants";
 
 type FieldProps<T> = {

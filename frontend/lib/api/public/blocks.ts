@@ -1,6 +1,6 @@
 import type { PlateValue } from "@/lib/plate-types";
 
-// ===== Типы блоков (волна 1) =====
+// ===== Типы блоков =====
 
 export type BlockType =
   | "text"
@@ -15,8 +15,7 @@ export type BlockType =
   | "video"
   | "tabs"
   | "quiz"
-  | "poll"
-  ;
+  | "poll";
 
 export type Block = {
   id: number;
@@ -27,8 +26,6 @@ export type Block = {
   created_at: string;
   updated_at: string;
 };
-
-// ===== Схемы data для каждого типа =====
 
 export type TextBlockData = { content_json?: PlateValue };
 
@@ -126,12 +123,10 @@ export type PollResults = {
 
 // ===== Хелперы =====
 
-/** URL файла из медиабиблиотеки */
 export function mediaUrl(id: number): string {
   return `/api/v1/media/${id}/file`;
 }
 
-/** Resolve изображения: media_id приоритетнее прямого url */
 export function resolveImageSrc(item: {
   media_id?: number;
   url?: string;
@@ -140,7 +135,7 @@ export function resolveImageSrc(item: {
   return item.url || "";
 }
 
-// ===== Server-side fetch (для SSR и SEO) =====
+// ===== Server-side fetch (SSR/SEO) =====
 
 export async function getPostBlocks(slug: string): Promise<Block[]> {
   const base =
@@ -160,70 +155,14 @@ export async function getPostBlocks(slug: string): Promise<Block[]> {
   }
 }
 
-// ===== Client-side fetch (для админ-редактора) =====
+// ===== Опросы (публично) =====
 
-export async function getAdminBlocks(postId: number): Promise<Block[]> {
-  const { apiGet } = await import("./client");
-  const res = await apiGet<{ items: Block[] }>(
-    `/api/v1/admin/posts/${postId}/blocks`
-  );
-  return res.items ?? [];
-}
-
-export async function createAdminBlock(
-  postId: number,
-  data: {
-    type: BlockType;
-    data?: Record<string, unknown>;
-    position?: number;
-  }
-): Promise<Block> {
-  const { apiPost } = await import("./client");
-  return apiPost<Block>(`/api/v1/admin/posts/${postId}/blocks`, data);
-}
-
-export async function updateAdminBlock(
-  blockId: number,
-  data: {
-    type?: BlockType;
-    data?: Record<string, unknown>;
-  }
-): Promise<Block> {
-  const { apiFetch } = await import("./client");
-  return apiFetch<Block>(`/api/v1/admin/blocks/${blockId}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deleteAdminBlock(blockId: number): Promise<void> {
-  const { apiDelete } = await import("./client");
-  await apiDelete(`/api/v1/admin/blocks/${blockId}`);
-}
-
-export async function reorderAdminBlocks(
-  postId: number,
-  blockIds: number[]
-): Promise<void> {
-  const { apiPost } = await import("./client");
-  await apiPost(`/api/v1/admin/posts/${postId}/blocks/reorder`, {
-    block_ids: blockIds,
-  });
-}
-
-export async function convertPostToBlocks(postId: number): Promise<void> {
-  const { apiPost } = await import("./client");
-  await apiPost(`/api/v1/admin/posts/${postId}/convert-to-blocks`, {});
-}
-
-/** Результаты опроса (публично) */
 export async function getPollResults(blockId: number): Promise<PollResults> {
   const res = await fetch(`/api/v1/blocks/${blockId}/poll`);
   if (!res.ok) throw new Error("failed to load poll results");
   return res.json();
 }
 
-/** Голосовать в опросе */
 export async function votePoll(
   blockId: number,
   optionIndexes: number[]
@@ -234,9 +173,7 @@ export async function votePoll(
     body: JSON.stringify({ option_indexes: optionIndexes }),
   });
   if (!res.ok) {
-    const err = await res
-      .json()
-      .catch(() => ({ error: "vote failed" }));
+    const err = await res.json().catch(() => ({ error: "vote failed" }));
     throw new Error(err.error || "vote failed");
   }
 }

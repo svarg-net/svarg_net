@@ -90,7 +90,7 @@ func (r *commentRepository) GetByID(ctx context.Context, id int64) (*model.Comme
 
 func (r *commentRepository) ListPending(ctx context.Context, limit, offset int) ([]model.Comment, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT c.`+commentColumns+`, p.title AS post_title
+		SELECT `+adminCommentColumns+`, p.title AS post_title
 		FROM comments c
 		JOIN posts p ON p.id = c.post_id
 		WHERE c.status = 'pending'

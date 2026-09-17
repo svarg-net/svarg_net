@@ -1,6 +1,6 @@
 "use client";
 
-import type { TableBlockData } from "@/lib/api/blocks";
+import type { TableBlockData } from "@/lib/api/public/blocks";
 
 type Props = {
   data: TableBlockData;

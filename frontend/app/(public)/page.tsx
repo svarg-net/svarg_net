@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getPosts, type Post } from "@/lib/api";
-import Pagination from "@/components/Pagination";
+import Pagination from "@/components/site/Pagination";
 
 export const metadata: Metadata = {
   title: "SVARG_NET — блог",

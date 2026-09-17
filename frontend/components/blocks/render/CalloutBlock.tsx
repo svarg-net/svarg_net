@@ -1,4 +1,4 @@
-import type { CalloutBlockData } from "@/lib/api/blocks";
+import type { CalloutBlockData } from "@/lib/api/public/blocks";
 
 const icons: Record<string, string> = {
   info: "ℹ️",

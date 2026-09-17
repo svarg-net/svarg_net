@@ -1,6 +1,6 @@
 "use client";
 
-import SeoPreview from "@/components/SeoPreview";
+import SeoPreview from "@/components/admin/SeoPreview";
 import { usePostForm } from "./PostFormContext";
 
 export default function SeoTab() {

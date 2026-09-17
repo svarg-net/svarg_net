@@ -1,4 +1,4 @@
-import type { TableBlockData } from "@/lib/api/blocks";
+import type { TableBlockData } from "@/lib/api/public/blocks";
 
 export default function TableBlock({ data }: { data: TableBlockData }) {
   const rows = data.rows || [];

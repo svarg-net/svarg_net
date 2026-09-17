@@ -23,7 +23,7 @@ import {
   updateAdminBlock,
   type Block,
   type BlockType,
-} from "@/lib/api/blocks";
+} from "@/lib/api/admin/blocks";
 import SortableBlockItem from "./editor/SortableBlockItem";
 import DropZone from "./editor/DropZone";
 import PaletteItem from "./editor/PaletteItem";

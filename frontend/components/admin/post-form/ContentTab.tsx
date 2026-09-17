@@ -1,6 +1,6 @@
 "use client";
 
-import PlateEditor from "@/components/PlateEditor";
+import PlateEditor from "@/components/site/PlateEditor";
 import BlockEditor from "@/components/blocks/BlockEditor";
 import { usePostForm } from "./PostFormContext";
 

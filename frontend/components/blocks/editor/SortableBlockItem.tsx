@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Block } from "@/lib/api/blocks";
+import type { Block } from "@/lib/api/public/blocks";
 import BlockFields from "./BlockFields";
 import { blockLabels } from "./constants";
 

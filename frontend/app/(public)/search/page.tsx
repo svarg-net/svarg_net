@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import SearchBar from "@/components/SearchBar";
-import { searchPosts, type Post } from "@/lib/api/search";
+import SearchBar from "@/components/site/SearchBar";
+import { searchPosts, type Post } from "@/lib/api/public/search";
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

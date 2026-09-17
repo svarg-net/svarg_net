@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Block, PollBlockData, PollResults } from "@/lib/api/blocks";
-import { getPollResults, votePoll } from "@/lib/api/blocks";
+import type { Block, PollBlockData, PollResults } from "@/lib/api/public/blocks";
+import { getPollResults, votePoll } from "@/lib/api/public/blocks";
 
 export default function PollBlock({ block }: { block: Block }) {
   const data = block.data as PollBlockData;

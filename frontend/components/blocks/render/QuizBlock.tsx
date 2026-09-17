@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { QuizBlockData } from "@/lib/api/blocks";
+import type { QuizBlockData } from "@/lib/api/public/blocks";
 
 type Phase = "answering" | "feedback" | "finished";
 

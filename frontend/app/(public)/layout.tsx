@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 import type { ReactNode } from "react";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/site/Sidebar";
 import "@/styles/sidebar.css";
 import "@/styles/public.css";
-import SearchBar from "@/components/SearchBar";
+import SearchBar from "@/components/site/SearchBar";
 
 export default function PublicLayout({
   children,

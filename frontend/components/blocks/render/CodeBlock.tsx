@@ -1,4 +1,4 @@
-import type { CodeBlockData } from "@/lib/api/blocks";
+import type { CodeBlockData } from "@/lib/api/public/blocks";
 import CopyButton from "@/components/blocks/CopyButton";
 
 export default function CodeBlock({ data }: { data: CodeBlockData }) {

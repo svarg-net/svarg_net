@@ -1,5 +1,5 @@
-import { apiGet } from "./client";
-import type { Post } from "./types";
+import { apiGet } from "../client";
+import type { Post } from "../types";
 
 export type { Post };
 

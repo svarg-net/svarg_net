@@ -1,5 +1,5 @@
-import type { ImageBlockData } from "@/lib/api/blocks";
-import { resolveImageSrc } from "@/lib/api/blocks";
+import type { ImageBlockData } from "@/lib/api/public/blocks";
+import { resolveImageSrc } from "@/lib/api/public/blocks";
 
 export default function ImageBlock({ data }: { data: ImageBlockData }) {
   const src = resolveImageSrc(data);
