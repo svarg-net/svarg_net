@@ -11,8 +11,43 @@ import (
 	"svarg_net/internal/model"
 )
 
-// blockColumns — единый список колонок для SELECT блоков.
-const blockColumns = `id, post_id, type, data, position, created_at, updated_at`
+// BlockRepository — операции с блоками.
+// Одна реализация параметризована таблицей и колонкой владельца:
+//   - посты:  table=blocks,        ownerCol=post_id
+//   - уроки:  table=lesson_blocks, ownerCol=lesson_id
+//
+// В model.Block поле PostID хранит id владельца (поста или урока).
+type BlockRepository interface {
+	ListByPostID(ctx context.Context, postID int64) ([]model.Block, error)
+	GetByID(ctx context.Context, id int64) (*model.Block, error)
+	Create(ctx context.Context, data model.BlockCreateData) (*model.Block, error)
+	Update(ctx context.Context, id int64, upd model.BlockUpdateData) (*model.Block, error)
+	Delete(ctx context.Context, id int64) error
+	Reorder(ctx context.Context, postID int64, blockIDs []int64) error
+	CountByPostID(ctx context.Context, postID int64) (int, error)
+	DeleteAllByPostID(ctx context.Context, postID int64) error
+}
+
+type blockRepository struct {
+	pool     *pgxpool.Pool
+	table    string
+	ownerCol string
+}
+
+// NewBlockRepository репозиторий блоков постов
+func NewBlockRepository(pool *pgxpool.Pool) BlockRepository {
+	return &blockRepository{pool: pool, table: "blocks", ownerCol: "post_id"}
+}
+
+// NewLessonBlockRepository репозиторий блоков уроков
+func NewLessonBlockRepository(pool *pgxpool.Pool) BlockRepository {
+	return &blockRepository{pool: pool, table: "lesson_blocks", ownerCol: "lesson_id"}
+}
+
+// columns список колонок SELECT для текущей таблицы
+func (r *blockRepository) columns() string {
+	return "id, " + r.ownerCol + ", type, data, position, created_at, updated_at"
+}
 
 // scanBlock читает одну строку блока. Возвращает (nil, nil) если строк нет.
 func scanBlock(row pgx.Row) (*model.Block, error) {
@@ -47,31 +82,14 @@ func scanBlocks(rows pgx.Rows) ([]model.Block, error) {
 	return blocks, nil
 }
 
-type BlockRepository interface {
-	ListByPostID(ctx context.Context, postID int64) ([]model.Block, error)
-	GetByID(ctx context.Context, id int64) (*model.Block, error)
-	Create(ctx context.Context, data model.BlockCreateData) (*model.Block, error)
-	Update(ctx context.Context, id int64, upd model.BlockUpdateData) (*model.Block, error)
-	Delete(ctx context.Context, id int64) error
-	Reorder(ctx context.Context, postID int64, blockIDs []int64) error
-	CountByPostID(ctx context.Context, postID int64) (int, error)
-	DeleteAllByPostID(ctx context.Context, postID int64) error
-}
-
-type blockRepository struct {
-	pool *pgxpool.Pool
-}
-
-func NewBlockRepository(pool *pgxpool.Pool) BlockRepository {
-	return &blockRepository{pool: pool}
-}
-
 func (r *blockRepository) ListByPostID(ctx context.Context, postID int64) ([]model.Block, error) {
-	rows, err := r.pool.Query(ctx, `
-		SELECT `+blockColumns+`
-		FROM blocks
-		WHERE post_id = $1
-		ORDER BY position, id`, postID)
+	query := fmt.Sprintf(`
+		SELECT %s
+		FROM %s
+		WHERE %s = $1
+		ORDER BY position, id`, r.columns(), r.table, r.ownerCol)
+
+	rows, err := r.pool.Query(ctx, query, postID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query blocks: %w", err)
 	}
@@ -79,8 +97,8 @@ func (r *blockRepository) ListByPostID(ctx context.Context, postID int64) ([]mod
 }
 
 func (r *blockRepository) GetByID(ctx context.Context, id int64) (*model.Block, error) {
-	return scanBlock(r.pool.QueryRow(ctx,
-		`SELECT `+blockColumns+` FROM blocks WHERE id = $1`, id))
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE id = $1`, r.columns(), r.table)
+	return scanBlock(r.pool.QueryRow(ctx, query, id))
 }
 
 func (r *blockRepository) Create(ctx context.Context, data model.BlockCreateData) (*model.Block, error) {
@@ -93,18 +111,17 @@ func (r *blockRepository) Create(ctx context.Context, data model.BlockCreateData
 	position := 0
 	if data.Position != nil {
 		position = *data.Position
-		// Сдвигаем блоки справа, чтобы освободить место
-		if _, err := tx.Exec(ctx, `
-			UPDATE blocks SET position = position + 1
-			WHERE post_id = $1 AND position >= $2`,
-			data.PostID, position); err != nil {
+		shiftQuery := fmt.Sprintf(`
+			UPDATE %s SET position = position + 1
+			WHERE %s = $1 AND position >= $2`, r.table, r.ownerCol)
+		if _, err := tx.Exec(ctx, shiftQuery, data.PostID, position); err != nil {
 			return nil, fmt.Errorf("failed to shift blocks: %w", err)
 		}
 	} else {
-		// В конец: max + 1
-		if err := tx.QueryRow(ctx, `
-			SELECT COALESCE(MAX(position), -1) + 1 FROM blocks WHERE post_id = $1`,
-			data.PostID).Scan(&position); err != nil {
+		maxQuery := fmt.Sprintf(`
+			SELECT COALESCE(MAX(position), -1) + 1 FROM %s WHERE %s = $1`,
+			r.table, r.ownerCol)
+		if err := tx.QueryRow(ctx, maxQuery, data.PostID).Scan(&position); err != nil {
 			return nil, fmt.Errorf("failed to get next position: %w", err)
 		}
 	}
@@ -114,10 +131,12 @@ func (r *blockRepository) Create(ctx context.Context, data model.BlockCreateData
 		dataJSON = json.RawMessage("{}")
 	}
 
-	block, err := scanBlock(tx.QueryRow(ctx, `
-		INSERT INTO blocks (post_id, type, data, position)
+	insertQuery := fmt.Sprintf(`
+		INSERT INTO %s (%s, type, data, position)
 		VALUES ($1, $2, $3, $4)
-		RETURNING `+blockColumns,
+		RETURNING %s`, r.table, r.ownerCol, r.columns())
+
+	block, err := scanBlock(tx.QueryRow(ctx, insertQuery,
 		data.PostID, data.Type, dataJSON, position))
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert block: %w", err)
@@ -133,14 +152,15 @@ func (r *blockRepository) Create(ctx context.Context, data model.BlockCreateData
 }
 
 func (r *blockRepository) Update(ctx context.Context, id int64, upd model.BlockUpdateData) (*model.Block, error) {
-	block, err := scanBlock(r.pool.QueryRow(ctx, `
-		UPDATE blocks SET
+	query := fmt.Sprintf(`
+		UPDATE %s SET
 			type = COALESCE($1, type),
 			data = COALESCE($2, data),
 			updated_at = now()
 		WHERE id = $3
-		RETURNING `+blockColumns,
-		upd.Type, upd.Data, id))
+		RETURNING %s`, r.table, r.columns())
+
+	block, err := scanBlock(r.pool.QueryRow(ctx, query, upd.Type, upd.Data, id))
 	if err != nil {
 		return nil, fmt.Errorf("failed to update block: %w", err)
 	}
@@ -154,9 +174,10 @@ func (r *blockRepository) Delete(ctx context.Context, id int64) error {
 	}
 	defer tx.Rollback(ctx)
 
-	var postID int64
-	err = tx.QueryRow(ctx,
-		`DELETE FROM blocks WHERE id = $1 RETURNING post_id`, id).Scan(&postID)
+	var ownerID int64
+	delQuery := fmt.Sprintf(`DELETE FROM %s WHERE id = $1 RETURNING %s`,
+		r.table, r.ownerCol)
+	err = tx.QueryRow(ctx, delQuery, id).Scan(&ownerID)
 	if err == pgx.ErrNoRows {
 		return nil // уже удалён
 	}
@@ -164,8 +185,7 @@ func (r *blockRepository) Delete(ctx context.Context, id int64) error {
 		return fmt.Errorf("failed to delete block: %w", err)
 	}
 
-	// Перенумеровываем оставшиеся блоки: 0, 1, 2, ...
-	if err := renumberBlocks(ctx, tx, postID); err != nil {
+	if err := renumberBlocks(ctx, tx, r.table, r.ownerCol, ownerID); err != nil {
 		return err
 	}
 
@@ -182,30 +202,28 @@ func (r *blockRepository) Reorder(ctx context.Context, postID int64, blockIDs []
 	}
 	defer tx.Rollback(ctx)
 
-	// Проверка: все блоки принадлежат посту
+	checkQuery := fmt.Sprintf(`
+		SELECT COUNT(*) FROM %s WHERE %s = $1 AND id = ANY($2)`,
+		r.table, r.ownerCol)
 	var count int
-	if err := tx.QueryRow(ctx, `
-		SELECT COUNT(*) FROM blocks WHERE post_id = $1 AND id = ANY($2)`,
-		postID, blockIDs).Scan(&count); err != nil {
+	if err := tx.QueryRow(ctx, checkQuery, postID, blockIDs).Scan(&count); err != nil {
 		return fmt.Errorf("failed to check block ownership: %w", err)
 	}
 	if count != len(blockIDs) {
-		return fmt.Errorf("some blocks do not belong to post %d", postID)
+		return fmt.Errorf("some blocks do not belong to owner %d", postID)
 	}
 
-	// Фаза 1: временные большие позиции
 	for i, id := range blockIDs {
-		if _, err := tx.Exec(ctx, `
-			UPDATE blocks SET position = 1000000 + $1, updated_at = now() WHERE id = $2`,
+		if _, err := tx.Exec(ctx, fmt.Sprintf(`
+			UPDATE %s SET position = 1000000 + $1, updated_at = now() WHERE id = $2`, r.table),
 			i, id); err != nil {
 			return fmt.Errorf("failed to set temp position: %w", err)
 		}
 	}
 
-	// Фаза 2: финальные позиции
 	for i, id := range blockIDs {
-		if _, err := tx.Exec(ctx, `
-			UPDATE blocks SET position = $1, updated_at = now() WHERE id = $2`,
+		if _, err := tx.Exec(ctx, fmt.Sprintf(`
+			UPDATE %s SET position = $1, updated_at = now() WHERE id = $2`, r.table),
 			i, id); err != nil {
 			return fmt.Errorf("failed to set final position: %w", err)
 		}
@@ -219,33 +237,34 @@ func (r *blockRepository) Reorder(ctx context.Context, postID int64, blockIDs []
 
 func (r *blockRepository) CountByPostID(ctx context.Context, postID int64) (int, error) {
 	var count int
-	if err := r.pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM blocks WHERE post_id = $1`, postID).Scan(&count); err != nil {
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s = $1`, r.table, r.ownerCol)
+	if err := r.pool.QueryRow(ctx, query, postID).Scan(&count); err != nil {
 		return 0, fmt.Errorf("failed to count blocks: %w", err)
 	}
 	return count, nil
 }
 
 func (r *blockRepository) DeleteAllByPostID(ctx context.Context, postID int64) error {
-	if _, err := r.pool.Exec(ctx,
-		`DELETE FROM blocks WHERE post_id = $1`, postID); err != nil {
+	query := fmt.Sprintf(`DELETE FROM %s WHERE %s = $1`, r.table, r.ownerCol)
+	if _, err := r.pool.Exec(ctx, query, postID); err != nil {
 		return fmt.Errorf("failed to delete all blocks: %w", err)
 	}
 	return nil
 }
 
-// renumberBlocks перенумеровывает позиции блоков поста: 0, 1, 2, ...
-func renumberBlocks(ctx context.Context, tx pgx.Tx, postID int64) error {
-	_, err := tx.Exec(ctx, `
+// renumberBlocks перенумеровывает позиции блоков владельца: 0, 1, 2, ...
+func renumberBlocks(ctx context.Context, tx pgx.Tx, table, ownerCol string, ownerID int64) error {
+	query := fmt.Sprintf(`
 		WITH ordered AS (
 			SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) - 1 AS new_pos
-			FROM blocks
-			WHERE post_id = $1
+			FROM %s
+			WHERE %s = $1
 		)
-		UPDATE blocks b SET position = o.new_pos
+		UPDATE %s b SET position = o.new_pos
 		FROM ordered o
-		WHERE b.id = o.id`, postID)
-	if err != nil {
+		WHERE b.id = o.id`, table, ownerCol, table)
+
+	if _, err := tx.Exec(ctx, query, ownerID); err != nil {
 		return fmt.Errorf("failed to renumber blocks: %w", err)
 	}
 	return nil
