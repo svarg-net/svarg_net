@@ -1,6 +1,6 @@
 "use client";
 
-import type { DailyStats } from "@/lib/api/stats";
+import type { DailyStats } from "@/lib/api/admin/stats";
 
 
 type Props = {

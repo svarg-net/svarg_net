@@ -1,7 +1,7 @@
 "use client";
 
-import PlateEditor from "@/components/PlateEditor";
-import type { TabsBlockData, TabsItem } from "@/lib/api/blocks";
+import PlateEditor from "@/components/site/PlateEditor";
+import type { TabsBlockData, TabsItem } from "@/lib/api/public/blocks";
 import { emptyPlate } from "../constants";
 
 type Props = {

@@ -1,6 +1,6 @@
 "use client";
 
-import PlateRenderer from "@/components/PlateRenderer";
+import PlateRenderer from "@/components/site/PlateRenderer";
 import { usePostForm } from "./PostFormContext";
 
 export default function PreviewTab() {

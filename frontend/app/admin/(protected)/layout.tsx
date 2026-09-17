@@ -1,4 +1,4 @@
-import RequireAuth from "@/components/RequireAuth";
+import RequireAuth from "@/components/common/RequireAuth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import "@/styles/admin/layout.css";
 import "@/styles/admin/base.css";

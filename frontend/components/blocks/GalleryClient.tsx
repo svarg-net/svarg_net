@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { GalleryBlockData } from "@/lib/api/blocks";
-import { resolveImageSrc } from "@/lib/api/blocks";
+import type { GalleryBlockData } from "@/lib/api/public/blocks";
+import { resolveImageSrc } from "@/lib/api/public/blocks";
 
 /**
  * Галерея с лайтбоксом: клик по картинке → полноэкранный просмотр.

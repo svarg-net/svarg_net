@@ -5,7 +5,7 @@ import type {
   CodeBlockData,
   DividerBlockData,
   QuoteBlockData,
-} from "@/lib/api/blocks";
+} from "@/lib/api/public/blocks";
 
 type FieldProps<T> = {
   data: T;

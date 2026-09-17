@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCategories, getTags, type Category, type Tag } from "@/lib/api";
-import PopularPosts from "@/components/PopularPosts";
+import PopularPosts from "@/components/site/PopularPosts";
 
 export default async function Sidebar() {
   let categories: Category[] = [];

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getPosts, type Post } from "@/lib/api";
-import PostForm from "@/components/PostForm";
+import PostForm from "@/components/admin/PostForm";
 
 export default function EditPostPage() {
   const router = useRouter();

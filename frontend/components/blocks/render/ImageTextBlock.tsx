@@ -1,6 +1,6 @@
-import type { ImageTextBlockData } from "@/lib/api/blocks";
-import { resolveImageSrc } from "@/lib/api/blocks";
-import PlateRenderer from "@/components/PlateRenderer";
+import type { ImageTextBlockData } from "@/lib/api/public/blocks";
+import { resolveImageSrc } from "@/lib/api/public/blocks";
+import PlateRenderer from "@/components/site/PlateRenderer";
 
 export default function ImageTextBlock({
   data,

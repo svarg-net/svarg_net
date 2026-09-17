@@ -1,7 +1,7 @@
 "use client";
 
-import PlateEditor from "@/components/PlateEditor";
-import type { TextBlockData } from "@/lib/api/blocks";
+import PlateEditor from "@/components/site/PlateEditor";
+import type { TextBlockData } from "@/lib/api/public/blocks";
 import { emptyPlate } from "../constants";
 
 type Props = {

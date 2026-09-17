@@ -7,7 +7,7 @@ import {
   deleteMedia,
   formatFileSize,
   type MediaFile,
-} from "@/lib/api/media";
+} from "@/lib/api/admin/media";
 
 export default function AdminMediaPage() {
   const [media, setMedia] = useState<MediaFile[]>([]);

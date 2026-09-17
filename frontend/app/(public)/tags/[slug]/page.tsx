@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTagBySlug, getPostsByTag, type Post } from "@/lib/api";
-import Pagination from "@/components/Pagination";
+import Pagination from "@/components/site/Pagination";
 
 export const dynamic = "force-dynamic";
 

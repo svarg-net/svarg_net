@@ -13,17 +13,17 @@ import {
   createTag,
   type Post,
 } from "@/lib/api";
-import { convertPostToBlocks } from "@/lib/api/blocks";
-import AdminTabs, { useActiveTab } from "@/components/AdminTabs";
+import { convertPostToBlocks } from "@/lib/api/admin/blocks";
+import AdminTabs, { useActiveTab } from "@/components/admin/AdminTabs";
 import {
   PostFormContext,
   type PostFormContextValue,
   type PostFormState,
-} from "@/components/post-form/PostFormContext";
-import ContentTab from "@/components/post-form/ContentTab";
-import PublishTab from "@/components/post-form/PublishTab";
-import SeoTab from "@/components/post-form/SeoTab";
-import PreviewTab from "@/components/post-form/PreviewTab";
+} from "@/components/admin/post-form/PostFormContext";
+import ContentTab from "@/components/admin/post-form/ContentTab";
+import PublishTab from "@/components/admin/post-form/PublishTab";
+import SeoTab from "@/components/admin/post-form/SeoTab";
+import PreviewTab from "@/components/admin/post-form/PreviewTab";
 import "@/styles/post-form.css";
 
 const emptyContent: PlateValue = [

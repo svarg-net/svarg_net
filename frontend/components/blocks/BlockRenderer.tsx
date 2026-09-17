@@ -12,7 +12,7 @@ import type {
   VideoBlockData,
   TabsBlockData,
   QuizBlockData
-} from "@/lib/api/blocks";
+} from "@/lib/api/public/blocks";
 import TextBlock from "./render/TextBlock";
 import ImageBlock from "./render/ImageBlock";
 import ImageTextBlock from "./render/ImageTextBlock";

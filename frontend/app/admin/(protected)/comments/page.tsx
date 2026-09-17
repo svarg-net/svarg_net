@@ -7,7 +7,7 @@ import {
   getPendingComments,
   rejectComment,
   type PendingComment,
-} from "@/lib/api/comments";
+} from "@/lib/api/admin/comments";
 
 export default function AdminCommentsPage() {
   const [comments, setComments] = useState<PendingComment[]>([]);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getPopularPosts, type PopularPost } from "@/lib/api/stats";
+import { getPopularPosts, type PopularPost } from "@/lib/api/public/stats";
 
 export default function PopularPosts() {
   const [posts, setPosts] = useState<PopularPost[]>([]);

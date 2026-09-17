@@ -1,7 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import type { BlockType } from "@/lib/api/blocks";
+import type { BlockType } from "@/lib/api/public/blocks";
 import { addableBlocks } from "./constants";
 
 type Props = {

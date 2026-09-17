@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId } from "react";
-import type { QuizBlockData, QuizQuestion } from "@/lib/api/blocks";
+import type { QuizBlockData, QuizQuestion } from "@/lib/api/public/blocks";
 
 type Props = {
   data: QuizBlockData;

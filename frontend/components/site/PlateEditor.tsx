@@ -25,7 +25,7 @@ import {
   type PlateElementProps,
 } from "@platejs/core/react";
 import type { PlateValue } from "@/lib/plate-types";
-import MediaPicker from "./MediaPicker";
+import MediaPicker from "@/components/common/MediaPicker";
 import type { MediaFile } from "@/lib/api";
 
 type PlateEditorProps = {
