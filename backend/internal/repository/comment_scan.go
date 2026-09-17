@@ -12,8 +12,10 @@ import (
 )
 
 // commentColumns — базовые колонки для SELECT комментариев.
-const commentColumns = `id, post_id, parent_id, author_name, author_email,
-	content, status, ip_hash, created_at, updated_at`
+const commentColumns = `id, post_id, parent_id, author_name, author_email, content, status, ip_hash, created_at, updated_at`
+
+// adminCommentColumns — для JOIN-запросов (всё с префиксом c.)
+const adminCommentColumns = `c.id, c.post_id, c.parent_id, c.author_name, c.author_email, c.content, c.status, c.ip_hash, c.created_at, c.updated_at`
 
 // scanComment читает одну строку комментария. Возвращает (nil, nil) если нет строк.
 func scanComment(row pgx.Row) (*model.Comment, error) {

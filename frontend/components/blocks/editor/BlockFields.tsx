@@ -19,7 +19,7 @@ import type {
   TabsBlockData,
   QuizBlockData,
   PollBlockData,
-} from "@/lib/api/blocks";
+} from "@/lib/api/public/blocks";
 import TextFields from "./fields/TextFields";
 import {
   CalloutFields,

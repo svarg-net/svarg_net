@@ -1,4 +1,4 @@
-import type { VideoBlockData } from "@/lib/api/blocks";
+import type { VideoBlockData } from "@/lib/api/public/blocks";
 
 /** Повторяет detectVideo из редактора */
 function detectVideo(url: string): { provider: string; embedUrl: string } {

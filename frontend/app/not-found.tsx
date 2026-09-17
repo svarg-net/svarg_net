@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import NotFoundTerminal from "@/components/NotFoundTerminal";
+import NotFoundTerminal from "@/components/site/NotFoundTerminal";
 
 export const metadata: Metadata = {
   title: "404 — страница не найдена",

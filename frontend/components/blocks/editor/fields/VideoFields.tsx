@@ -1,6 +1,6 @@
 "use client";
 
-import type { VideoBlockData } from "@/lib/api/blocks";
+import type { VideoBlockData } from "@/lib/api/public/blocks";
 
 type Props = {
   data: VideoBlockData;

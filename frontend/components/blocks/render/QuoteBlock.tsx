@@ -1,4 +1,4 @@
-import type { QuoteBlockData } from "@/lib/api/blocks";
+import type { QuoteBlockData } from "@/lib/api/public/blocks";
 
 export default function QuoteBlock({ data }: { data: QuoteBlockData }) {
   if (!data.text) return null;

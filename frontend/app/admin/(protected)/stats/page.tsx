@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getAdminStats, type AdminStats } from "@/lib/api/stats";
-import StatsChart from "@/components/StatsChart";
+import { getAdminStats, type AdminStats } from "@/lib/api/admin/stats";
+import StatsChart from "@/components/admin/StatsChart";
 import "@/styles/stats.css";
 
 const PERIODS = [

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createComment, getCommentToken } from "@/lib/api/comments";
+import { createComment, getCommentToken } from "@/lib/api/public/comments";
 
 type Props = {
   postId: number;

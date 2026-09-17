@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { recordPostView } from "@/lib/api/stats";
+import { recordPostView } from "@/lib/api/public/stats";
 
 type Props = {
   slug: string;

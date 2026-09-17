@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import PlateRenderer from "@/components/PlateRenderer";
+import PlateRenderer from "@/components/site/PlateRenderer";
 import {
   getPostBySlug,
   getCategories,
   type Category,
 } from "@/lib/api";
 import type { PlateValue } from "@/lib/plate-types";
-import PostViewCounter from "@/components/PostViewCounter";
-import { getPostViews } from "@/lib/api/stats";
-import CommentList from "@/components/CommentList";
+import PostViewCounter from "@/components/site/PostViewCounter";
+import { getPostViews } from "@/lib/api/public/stats";
+import CommentList from "@/components/site/CommentList";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getPostBlocks } from "@/lib/api/blocks";
+import { getPostBlocks } from "@/lib/api/public/blocks";
 import { buildPostMetadata } from "@/lib/seo/postMetadata";
 import { formatDate } from "@/lib/seo/format";
-import ArticleJsonLd from "@/components/seo/ArticleJsonLd";
+import ArticleJsonLd from "@/components/admin/seo/ArticleJsonLd";
 
 export const dynamic = "force-dynamic";
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getComments, type Comment } from "@/lib/api/comments";
-import CommentMarkdown from "@/components/CommentMarkdown";
-import CommentForm from "@/components/CommentForm";
+import { getComments, type Comment } from "@/lib/api/public/comments";
+import CommentMarkdown from "@/components/site/CommentMarkdown";
+import CommentForm from "@/components/site/CommentForm";
 import "@/styles/comments.css";
 
 type Props = {

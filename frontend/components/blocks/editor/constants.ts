@@ -1,5 +1,5 @@
 import type { PlateValue } from "@/lib/plate-types";
-import type { BlockType } from "@/lib/api/blocks";
+import type { BlockType } from "@/lib/api/public/blocks";
 
 export const emptyPlate: PlateValue = [
   { type: "p", children: [{ text: "" }] },

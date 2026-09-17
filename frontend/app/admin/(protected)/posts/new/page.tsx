@@ -1,6 +1,6 @@
 "use client";
 
-import PostForm from "@/components/PostForm";
+import PostForm from "@/components/admin/PostForm";
 
 export default function NewPostPage() {
   return (

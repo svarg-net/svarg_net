@@ -1,4 +1,4 @@
-import type { DividerBlockData } from "@/lib/api/blocks";
+import type { DividerBlockData } from "@/lib/api/public/blocks";
 
 export default function DividerBlock({ data }: { data: DividerBlockData }) {
   const style = data.style || "line";
