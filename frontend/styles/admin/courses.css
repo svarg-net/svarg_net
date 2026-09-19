@@ -1,0 +1,34 @@
+/* === Специфичные стили курсов и уроков === */
+
+/* Форма создания урока (grid layout) */
+.lesson-create-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.lesson-create-form label {
+  margin-bottom: 0;
+}
+
+.checkbox-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400 !important;
+}
+
+/* Строка редактирования в таблице уроков */
+.edit-row input {
+  padding: 4px 6px;
+  border: 1px solid #d0d5dd;
+  border-radius: 4px;
+  font: inherit;
+  width: 100%;
+}
