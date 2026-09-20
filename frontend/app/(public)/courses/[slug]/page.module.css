@@ -1,0 +1,91 @@
+.course-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 48px;
+}
+
+.course-cover-large {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.course-cover-large img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.course-info h1 {
+  margin: 0 0 16px 0;
+  font-size: 2rem;
+}
+
+.description {
+  font-size: 1.125rem;
+  color: #475467;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.course-stats {
+  display: flex;
+  gap: 24px;
+  font-size: 1rem;
+  color: #667085;
+}
+
+.lessons-list {
+  list-style: none;
+  padding: 0;
+  margin: 32px 0;
+}
+
+.lessons-list li {
+  margin-bottom: 12px;
+}
+
+.lesson-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s;
+}
+
+.lesson-item:hover {
+  background: #f9fafb;
+}
+
+.lesson-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2e90fa;
+  min-width: 40px;
+}
+
+.lesson-content h3 {
+  margin: 0 0 8px 0;
+}
+
+.lesson-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #667085;
+}
+
+.free-badge {
+  color: #027a48;
+}
+
+.locked-badge {
+  color: #93370d;
+}
+
+.back-link {
+  margin-top: 48px;
+}

@@ -148,3 +148,30 @@ export type TagUpdateData = {
   meta_description?: string;
   og_image?: string;
 };
+// === Courses & Lessons ===
+
+export interface Course {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string;
+  status: 'draft' | 'published';
+  level: 'beginner' | 'intermediate' | 'advanced';
+  position: number;
+  lesson_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Lesson {
+  id: number;
+  course_id: number;
+  title: string;
+  slug: string;
+  position: number;
+  is_free: boolean;
+  min_score: number;
+  block_count?: number;
+  created_at: string;
+  updated_at: string;
+}

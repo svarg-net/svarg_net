@@ -28,6 +28,8 @@ type container struct {
 	commentHandler  *handler.CommentHandler
 	blockHandler    *handler.BlockHandler
 	pollHandler     *handler.PollHandler
+	courseHandler   *handler.CourseHandler
+	lessonHandler   *handler.LessonHandler
 
 	// Services
 	authService service.AuthService
@@ -59,6 +61,9 @@ func newContainer(
 	commentRepo := repository.NewCommentRepository(pool)
 	blockRepo := repository.NewBlockRepository(pool)
 	pollRepo := repository.NewPollRepository(pool)
+	courseRepo := repository.NewCourseRepository(pool)
+	lessonRepo := repository.NewLessonRepository(pool)
+	lessonBlockRepo := repository.NewLessonBlockRepository(pool)
 
 	// Services
 	postService := service.NewPostService(postRepo, tagRepo, log)
@@ -71,6 +76,9 @@ func newContainer(
 	commentService := service.NewCommentService(commentRepo, postRepo, redisClient, log)
 	blockService := service.NewBlockService(blockRepo, postRepo, log)
 	pollService := service.NewPollService(pollRepo, blockRepo)
+	courseService := service.NewCourseService(courseRepo, log)
+	lessonService := service.NewLessonService(lessonRepo, courseRepo, log)
+	lessonBlockService := service.NewLessonBlockService(lessonBlockRepo, lessonRepo, log)
 
 	// Handlers
 	return &container{
@@ -84,6 +92,8 @@ func newContainer(
 		commentHandler:  handler.NewCommentHandler(commentService, log),
 		blockHandler:    handler.NewBlockHandler(blockService, log),
 		pollHandler:     handler.NewPollHandler(pollService, log),
+		courseHandler:   handler.NewCourseHandler(courseService, log),
+		lessonHandler:   handler.NewLessonHandler(lessonService, lessonBlockService, courseService, log),
 		authService:     authService,
 		loginLimiter:    rateLimitMiddleware(newRateLimiterStore(rate.Every(time.Minute), 5)),
 		commentLimiter:  rateLimitMiddleware(newRateLimiterStore(rate.Every(2*time.Minute), 2)),

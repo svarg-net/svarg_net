@@ -19,6 +19,16 @@ export default async function Sidebar() {
 
   return (
     <aside className="sidebar">
+      {/* Курсы */}
+      <div className="sidebar-section">
+        <h3 className="sidebar-title">Курсы</h3>
+        <nav className="sidebar-nav">
+          <Link href="/courses" className="sidebar-link">
+            📚 Все курсы
+          </Link>
+        </nav>
+      </div>
+
       {/* Категории */}
       <div className="sidebar-section">
         <h3 className="sidebar-title">Категории</h3>

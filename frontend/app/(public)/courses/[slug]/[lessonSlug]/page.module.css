@@ -1,0 +1,62 @@
+.breadcrumb {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  font-size: 14px;
+  color: #667085;
+}
+
+.breadcrumb a {
+  color: #2e90fa;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.lesson-content {
+  margin: 48px 0;
+  max-width: 800px;
+}
+
+.lesson-navigation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid #e4e7ec;
+}
+
+.nav-prev,
+.nav-next {
+  padding: 20px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s;
+}
+
+.nav-prev:hover,
+.nav-next:hover {
+  background: #f9fafb;
+}
+
+.nav-next {
+  text-align: right;
+}
+
+.nav-label {
+  display: block;
+  font-size: 14px;
+  color: #667085;
+  margin-bottom: 8px;
+}
+
+.nav-title {
+  display: block;
+  font-weight: 600;
+  color: #101828;
+}
