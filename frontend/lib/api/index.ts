@@ -22,3 +22,5 @@ export * from "./admin/blocks";
 export * from "./admin/media";
 export * from "./admin/stats";
 export * from "./admin/courses";
+export * from "./public/courses";
+export * from "./public/courses";
