@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/admin/comments", icon: "💬", title: "Комментарии" },
   { href: "/admin/polls", icon: "🗳", title: "Опросы" },
   { href: "/admin/stats", icon: "📊", title: "Статистика" },
+  { href: "/admin/courses", icon: "📚", title: "Курсы" },
 ];
 
 export default function AdminSidebar() {

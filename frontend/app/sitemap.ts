@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getCategories, getPosts, getTags } from "@/lib/api";
+import { getCategories, getPosts, getTags, getPublicCourses, getPublicLessons } from "@/lib/api";
 
 const SITE_URL = process.env.SITE_URL || "https://svarg.net";
 
@@ -56,6 +56,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch (error) {
     console.error("sitemap: failed to load tags", error);
+  }
+
+  
+  // Курсы и уроки
+  try {
+    const { items: courses } = await getPublicCourses();
+    for (const course of courses) {
+      entries.push({
+        url: `${SITE_URL}/courses/${course.slug}`,
+        lastModified: new Date(course.updated_at),
+        changeFrequency: "weekly",
+        priority: 0.8,
+      });
+
+      const { items: lessons } = await getPublicLessons(course.slug);
+      for (const lesson of lessons) {
+        entries.push({
+          url: `${SITE_URL}/courses/${course.slug}/${lesson.slug}`,
+          lastModified: new Date(lesson.updated_at),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("sitemap: failed to load courses", error);
   }
 
   return entries;

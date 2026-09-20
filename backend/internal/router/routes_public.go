@@ -47,4 +47,11 @@ func registerPublicRoutes(mux *http.ServeMux, c *container, pool *pgxpool.Pool) 
 	mux.HandleFunc("GET /api/v1/blocks/{id}/poll", c.pollHandler.Results)
 
 	mux.Handle("POST /api/v1/auth/register", c.loginLimiter(http.HandlerFunc(c.authHandler.Register)))
+
+	// Курсы (публичные)
+	mux.HandleFunc("GET /api/v1/courses", c.courseHandler.ListCourses)
+	mux.HandleFunc("GET /api/v1/courses/{slug}", c.courseHandler.GetCourse)
+	mux.HandleFunc("GET /api/v1/courses/{slug}/lessons", c.lessonHandler.ListLessons)
+	mux.HandleFunc("GET /api/v1/courses/{slug}/lessons/{lessonSlug}", c.lessonHandler.GetLesson)
+	mux.HandleFunc("GET /api/v1/lessons/{id}/blocks", c.lessonHandler.ListLessonBlocksPublic)
 }

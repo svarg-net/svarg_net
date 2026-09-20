@@ -158,3 +158,170 @@
     padding: 8px 10px;
   }
 }
+
+/* ==================== Общие компоненты админки ==================== */
+
+.admin-page {
+  padding: 20px 0;
+}
+
+/* Таблицы */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #475467;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover {
+  background: #f9fafb;
+}
+
+/* Формы */
+.admin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  max-width: 640px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+  padding: 8px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font: inherit;
+  background: #fff;
+}
+
+.admin-form textarea {
+  resize: vertical;
+}
+
+.admin-form .form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Кнопки */
+.admin-button {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #2e90fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}
+
+.admin-button:hover {
+  background: #1570cd;
+}
+
+.admin-button:disabled {
+  background: #d0d5dd;
+  cursor: not-allowed;
+}
+
+.admin-button-secondary {
+  padding: 8px 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+  color: #344054;
+}
+
+.admin-button-secondary:hover {
+  background: #f2f4f7;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  margin-right: 4px;
+  border: 1px solid #d0d5dd;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn-small:hover {
+  background: #f2f4f7;
+}
+
+.btn-danger:hover {
+  background: #fee4e2;
+  border-color: #fda29b;
+}
+
+/* Сообщения */
+.admin-error {
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border: 1px solid #fda29b;
+  border-radius: 6px;
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #667085;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+/* Бейджи статусов */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.published {
+  background: #d1fadf;
+  color: #027a48;
+}
+
+.status-badge.draft {
+  background: #fef0c7;
+  color: #93370d;
+}
+
+/* Действия в таблицах */
+.actions {
+  white-space: nowrap;
+}

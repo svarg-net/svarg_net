@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -9,12 +9,12 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+} from '@dnd-kit/sortable';
 import {
   createAdminBlock,
   deleteAdminBlock,
@@ -23,23 +23,43 @@ import {
   updateAdminBlock,
   type Block,
   type BlockType,
-} from "@/lib/api/admin/blocks";
-import SortableBlockItem from "./editor/SortableBlockItem";
-import DropZone from "./editor/DropZone";
-import PaletteItem from "./editor/PaletteItem";
-import { addableBlocks, blockLabels } from "./editor/constants";
-import "@/styles/admin/block-editor/editor.css";
-import "@/styles/admin/block-editor/palette.css";
+} from '@/lib/api/admin/blocks';
+import SortableBlockItem from './editor/SortableBlockItem';
+import DropZone from './editor/DropZone';
+import PaletteItem from './editor/PaletteItem';
+import { addableBlocks, blockLabels } from './editor/constants';
+import '@/styles/admin/block-editor/editor.css';
+import '@/styles/admin/block-editor/palette.css';
+
+export type BlockEditorApi = {
+  getBlocks: (ownerId: number) => Promise<Block[]>;
+  createBlock: (
+    ownerId: number,
+    data: { type: BlockType; data?: Record<string, unknown>; position?: number }
+  ) => Promise<Block>;
+  updateBlock: (id: number, data: { type?: BlockType; data?: Record<string, unknown> }) => Promise<Block>;
+  deleteBlock: (id: number) => Promise<void>;
+  reorderBlocks: (ownerId: number, blockIds: number[]) => Promise<void>;
+};
+
+const defaultApi: BlockEditorApi = {
+  getBlocks: getAdminBlocks,
+  createBlock: createAdminBlock,
+  updateBlock: updateAdminBlock,
+  deleteBlock: deleteAdminBlock,
+  reorderBlocks: reorderAdminBlocks,
+};
 
 type Props = {
   postId: number;
+  api?: BlockEditorApi;
 };
 
-export default function BlockEditor({ postId }: Props) {
+export default function BlockEditor({ postId, api = defaultApi }: Props) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [insertAt, setInsertAt] = useState<number | null>(null);
   const [dragLabel, setDragLabel] = useState<string | null>(null);
 
@@ -47,17 +67,20 @@ export default function BlockEditor({ postId }: Props) {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError("");
-    try {
-      setBlocks(await getAdminBlocks(postId));
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [postId]);
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      setError('');
+      try {
+        setBlocks(await api.getBlocks(postId));
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [postId, api]
+  );
 
   useEffect(() => {
     load();
@@ -74,7 +97,7 @@ export default function BlockEditor({ postId }: Props) {
 
     setBusy(true);
     try {
-      const created = await createAdminBlock(postId, {
+      const created = await api.createBlock(postId, {
         type,
         data: config.defaultData,
       });
@@ -82,7 +105,7 @@ export default function BlockEditor({ postId }: Props) {
       if (at !== null && at < blocks.length) {
         const next = [...blocks];
         next.splice(at, 0, created);
-        await reorderAdminBlocks(
+        await api.reorderBlocks(
           postId,
           next.map((b) => b.id)
         );
@@ -100,11 +123,11 @@ export default function BlockEditor({ postId }: Props) {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Удалить блок?")) return;
+    if (!confirm('Удалить блок?')) return;
 
     setBusy(true);
     try {
-      await deleteAdminBlock(id);
+      await api.deleteBlock(id);
       setBlocks((prev) => prev.filter((b) => b.id !== id));
       setInsertAt(null);
     } catch (err) {
@@ -117,7 +140,7 @@ export default function BlockEditor({ postId }: Props) {
   const handleDuplicate = async (block: Block) => {
     setBusy(true);
     try {
-      await createAdminBlock(postId, {
+      await api.createBlock(postId, {
         type: block.type as BlockType,
         data: block.data,
         position: block.position + 1,
@@ -137,7 +160,7 @@ export default function BlockEditor({ postId }: Props) {
   const handleSave = async (block: Block) => {
     setBusy(true);
     try {
-      const updated = await updateAdminBlock(block.id, { data: block.data });
+      const updated = await api.updateBlock(block.id, { data: block.data });
       setBlocks((prev) => prev.map((b) => (b.id === block.id ? updated : b)));
     } catch (err) {
       alert((err as Error).message);
@@ -148,7 +171,7 @@ export default function BlockEditor({ postId }: Props) {
 
   const handleDragStart = (event: DragStartEvent) => {
     const id = String(event.active.id);
-    if (id.startsWith("new:")) {
+    if (id.startsWith('new:')) {
       setDragLabel(id.slice(4));
     }
   };
@@ -161,12 +184,12 @@ export default function BlockEditor({ postId }: Props) {
     const activeId = String(active.id);
 
     // Тянем новый тип блока из палитры
-    if (activeId.startsWith("new:")) {
+    if (activeId.startsWith('new:')) {
       const type = activeId.slice(4) as BlockType;
       const overId = String(over.id);
 
       let at: number | null;
-      if (overId.startsWith("zone:")) {
+      if (overId.startsWith('zone:')) {
         at = Number(overId.slice(5));
       } else {
         const idx = blocks.findIndex((b) => String(b.id) === overId);
@@ -189,7 +212,7 @@ export default function BlockEditor({ postId }: Props) {
     setInsertAt(null);
 
     try {
-      await reorderAdminBlocks(
+      await api.reorderBlocks(
         postId,
         next.map((b) => b.id)
       );
@@ -221,9 +244,9 @@ export default function BlockEditor({ postId }: Props) {
             <div className="block-palette-hint">
               {insertAt !== null
                 ? insertAt >= blocks.length
-                  ? "Вставка: в конец списка"
+                  ? 'Вставка: в конец списка'
                   : `Вставка: перед блоком ${insertAt + 1}`
-                : "Клик — добавить. Перетащи тип блока на линию между блоками"}
+                : 'Клик — добавить. Перетащи тип блока на линию между блоками'}
             </div>
 
             {addableBlocks.map((b) => (
