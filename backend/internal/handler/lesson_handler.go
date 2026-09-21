@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -325,12 +326,19 @@ func (h *LessonHandler) ListLessonBlocksPublic(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// TODO: проверка доступа (is_free + прогресс студента) будет в волне 2
-	// Пока отдаём блоки всем
+	// Доступ: is_free — всем, платные — только записанным на курс
+	var userID int64
+	if user, ok := getUserFromRequest(r); ok {
+		userID = user.ID
+	}
 
-	blocks, err := h.lessonBlockService.ListPublic(r.Context(), lessonID)
+	blocks, err := h.lessonBlockService.ListPublicWithAccess(r.Context(), lessonID, userID)
 	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		if errors.Is(err, service.ErrEnrollmentRequired) {
+			writeJSONError(w, http.StatusForbidden, "enrollment_required")
+			return
+		}
+		writeJSONError(w, http.StatusNotFound, err.Error())
 		return
 	}
 

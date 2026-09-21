@@ -112,6 +112,34 @@ func authMiddleware(next http.Handler, authService service.AuthService, log logg
 	})
 }
 
+// optionalAuthMiddleware пытается распознать токен, но не требует его.
+// Используется для страниц, где контент зависит от авторизации (уроки курсов).
+func optionalAuthMiddleware(next http.Handler, authService service.AuthService, log logger.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		user, err := authService.GetUserByToken(r.Context(), parts[1])
+		if err != nil {
+			// Анонимный доступ — просто продолжаем без пользователя
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "user", user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // requireAdmin пропускает только пользователей с ролью admin
 func requireAdmin(next http.Handler, log logger.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
