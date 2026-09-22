@@ -19,6 +19,7 @@ func registerAdminRoutes(mux *http.ServeMux, c *container) {
         authOnlyMux.HandleFunc("POST /api/v1/lessons/{id}/complete", c.progressHandler.MarkComplete)
         authOnlyMux.HandleFunc("POST /api/v1/lessons/{id}/quiz", c.progressHandler.SubmitQuiz)
         authOnlyMux.HandleFunc("GET /api/v1/me/courses/{id}/progress", c.progressHandler.GetCourseProgress)
+        authOnlyMux.HandleFunc("GET /api/v1/me/courses/{id}/lessons-progress", c.progressHandler.GetMyLessonsProgress)
         authOnlyMux.HandleFunc("GET /api/v1/lessons/{id}/progress", c.progressHandler.GetLessonProgress)
 
 	// Mux 2: админские маршруты (только role=admin)
@@ -81,6 +82,7 @@ func registerAdminRoutes(mux *http.ServeMux, c *container) {
         mux.Handle("POST /api/v1/lessons/{id}/complete", authOnlyHandler)
         mux.Handle("POST /api/v1/lessons/{id}/quiz", authOnlyHandler)
         mux.Handle("GET /api/v1/me/courses/{id}/progress", authOnlyHandler)
+        mux.Handle("GET /api/v1/me/courses/{id}/lessons-progress", authOnlyHandler)
         mux.Handle("GET /api/v1/lessons/{id}/progress", authOnlyHandler)
 
 	// Монтируем admin-only

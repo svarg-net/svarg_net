@@ -140,3 +140,28 @@ func (h *ProgressHandler) GetLessonProgress(w http.ResponseWriter, r *http.Reque
 
 	writeJSON(w, http.StatusOK, progress)
 }
+
+// GetMyLessonsProgress GET /api/v1/me/courses/{id}/lessons-progress
+func (h *ProgressHandler) GetMyLessonsProgress(w http.ResponseWriter, r *http.Request) {
+	user, ok := getUserFromRequest(r)
+	if !ok {
+		writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	courseID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid course id")
+		return
+	}
+
+	items, err := h.progressService.GetMyLessonsProgress(r.Context(), user.ID, courseID)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"items": items,
+	})
+}

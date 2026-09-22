@@ -26,6 +26,9 @@ export default async function Sidebar() {
           <Link href="/courses" className="sidebar-link">
             📚 Все курсы
           </Link>
+          <Link href="/cabinet" className="sidebar-link">
+            🎓 Мой кабинет
+          </Link>
         </nav>
       </div>
 

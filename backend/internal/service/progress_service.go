@@ -19,6 +19,8 @@ type ProgressService interface {
 	GetCourseProgress(ctx context.Context, userID, courseID int64) (*model.CourseProgressSummary, error)
 	// GetLessonProgress возвращает прогресс студента по уроку
 	GetLessonProgress(ctx context.Context, userID, lessonID int64) (*model.LessonProgress, error)
+	// GetMyLessonsProgress прогресс студента по всем урокам курса
+	GetMyLessonsProgress(ctx context.Context, userID, courseID int64) ([]model.LessonProgress, error)
 	// CanAccessLesson проверяет, есть ли у студента доступ к уроку
 	CanAccessLesson(ctx context.Context, userID, lessonID int64) (bool, error)
 }
@@ -148,6 +150,10 @@ func (s *progressService) GetCourseProgress(ctx context.Context, userID, courseI
 
 func (s *progressService) GetLessonProgress(ctx context.Context, userID, lessonID int64) (*model.LessonProgress, error) {
 	return s.progressRepo.GetByUserAndLesson(ctx, userID, lessonID)
+}
+
+func (s *progressService) GetMyLessonsProgress(ctx context.Context, userID, courseID int64) ([]model.LessonProgress, error) {
+	return s.progressRepo.ListByUserAndCourse(ctx, userID, courseID)
 }
 
 func (s *progressService) CanAccessLesson(ctx context.Context, userID, lessonID int64) (bool, error) {
