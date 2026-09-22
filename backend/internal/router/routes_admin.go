@@ -10,6 +10,18 @@ func registerAdminRoutes(mux *http.ServeMux, c *container) {
 	authOnlyMux := http.NewServeMux()
 	authOnlyMux.HandleFunc("GET /api/v1/auth/me", c.authHandler.GetMe)
 
+        // Enrollments (auth-only, любой залогиненный)
+        authOnlyMux.HandleFunc("POST /api/v1/courses/{slug}/enroll", c.enrollmentHandler.Enroll)
+        authOnlyMux.HandleFunc("GET /api/v1/me/enrollments", c.enrollmentHandler.ListMyEnrollments)
+        authOnlyMux.HandleFunc("GET /api/v1/courses/{id}/enrollment-status", c.enrollmentHandler.GetEnrollmentStatus)
+
+        // Progress (auth-only)
+        authOnlyMux.HandleFunc("POST /api/v1/lessons/{id}/complete", c.progressHandler.MarkComplete)
+        authOnlyMux.HandleFunc("POST /api/v1/lessons/{id}/quiz", c.progressHandler.SubmitQuiz)
+        authOnlyMux.HandleFunc("GET /api/v1/me/courses/{id}/progress", c.progressHandler.GetCourseProgress)
+        authOnlyMux.HandleFunc("GET /api/v1/me/courses/{id}/lessons-progress", c.progressHandler.GetMyLessonsProgress)
+        authOnlyMux.HandleFunc("GET /api/v1/lessons/{id}/progress", c.progressHandler.GetLessonProgress)
+
 	// Mux 2: админские маршруты (только role=admin)
 	adminOnlyMux := http.NewServeMux()
 
@@ -60,6 +72,18 @@ func registerAdminRoutes(mux *http.ServeMux, c *container) {
 
 	// Монтируем auth-only
 	mux.Handle("GET /api/v1/auth/me", authOnlyHandler)
+
+        // Enrollments (auth-only)
+        mux.Handle("POST /api/v1/courses/{slug}/enroll", authOnlyHandler)
+        mux.Handle("GET /api/v1/me/enrollments", authOnlyHandler)
+        mux.Handle("GET /api/v1/courses/{id}/enrollment-status", authOnlyHandler)
+
+        // Progress (auth-only)
+        mux.Handle("POST /api/v1/lessons/{id}/complete", authOnlyHandler)
+        mux.Handle("POST /api/v1/lessons/{id}/quiz", authOnlyHandler)
+        mux.Handle("GET /api/v1/me/courses/{id}/progress", authOnlyHandler)
+        mux.Handle("GET /api/v1/me/courses/{id}/lessons-progress", authOnlyHandler)
+        mux.Handle("GET /api/v1/lessons/{id}/progress", authOnlyHandler)
 
 	// Монтируем admin-only
 	mux.Handle("POST /api/v1/posts", adminOnlyHandler)

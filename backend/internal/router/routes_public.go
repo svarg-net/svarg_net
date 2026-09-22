@@ -53,5 +53,7 @@ func registerPublicRoutes(mux *http.ServeMux, c *container, pool *pgxpool.Pool) 
 	mux.HandleFunc("GET /api/v1/courses/{slug}", c.courseHandler.GetCourse)
 	mux.HandleFunc("GET /api/v1/courses/{slug}/lessons", c.lessonHandler.ListLessons)
 	mux.HandleFunc("GET /api/v1/courses/{slug}/lessons/{lessonSlug}", c.lessonHandler.GetLesson)
-	mux.HandleFunc("GET /api/v1/lessons/{id}/blocks", c.lessonHandler.ListLessonBlocksPublic)
+	// Блоки урока: контент зависит от авторизации (is_free vs enrolled)
+	lessonBlocksHandler := optionalAuthMiddleware(http.HandlerFunc(c.lessonHandler.ListLessonBlocksPublic), c.authService, c.log)
+	mux.Handle("GET /api/v1/lessons/{id}/blocks", lessonBlocksHandler)
 }
