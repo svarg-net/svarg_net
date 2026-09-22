@@ -21,6 +21,7 @@ export async function getPublicLesson(
   return apiGet<Lesson>(`/api/v1/courses/${courseSlug}/lessons/${lessonSlug}`);
 }
 
+// Клиентская загрузка блоков (с токеном если есть → для 🔒-уроков)
 export async function getPublicLessonBlocks(lessonId: number): Promise<{ items: Block[] }> {
   return apiGet<{ items: Block[] }>(`/api/v1/lessons/${lessonId}/blocks`);
 }

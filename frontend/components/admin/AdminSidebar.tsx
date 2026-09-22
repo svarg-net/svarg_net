@@ -13,6 +13,8 @@ const NAV_ITEMS = [
   { href: "/admin/polls", icon: "🗳", title: "Опросы" },
   { href: "/admin/stats", icon: "📊", title: "Статистика" },
   { href: "/admin/courses", icon: "📚", title: "Курсы" },
+  { href: "/admin/enrollments", icon: "🎓", title: "Записи" },
+  { href: "/admin/progress", icon: "📈", title: "Прогресс" },
 ];
 
 export default function AdminSidebar() {

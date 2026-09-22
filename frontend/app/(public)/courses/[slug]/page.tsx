@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import EnrollButton from '@/components/courses/EnrollButton';
+import CourseLessonsList from '@/components/courses/CourseLessonsList';
 import { getPublicCourse, getPublicLessons } from '@/lib/api';
 import '@/styles/public/courses.css';
 import { notFound } from 'next/navigation';
@@ -24,36 +26,16 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         <span>🎯 Уровень: {course.level}</span>
       </div>
 
+      <div className="enroll-section">
+        <EnrollButton courseId={course.id} courseSlug={course.slug} />
+      </div>
+
       <h2>Программа курса</h2>
-      {lessons.length === 0 ? (
-        <p>Уроки пока не добавлены.</p>
-      ) : (
-        <ol className="lessons-list">
-          {lessons.map((lesson, idx) => (
-            <li key={lesson.id}>
-              <Link
-                href={`/courses/${course.slug}/${lesson.slug}`}
-                className="lesson-item"
-              >
-                <span className="lesson-number">{idx + 1}</span>
-                <div className="lesson-content">
-                  <h3>{lesson.title}</h3>
-                  <div className="lesson-meta">
-                    {lesson.is_free ? (
-                      <span className="free-badge">🔓 Бесплатно</span>
-                    ) : (
-                      <span className="locked-badge">🔒 Требуется запись</span>
-                    )}
-                    {lesson.min_score > 0 && (
-                      <span>Тест: {lesson.min_score}%</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      )}
+      <CourseLessonsList
+        courseId={course.id}
+        courseSlug={course.slug}
+        lessons={lessons}
+      />
 
       <div className="back-link">
         <Link href="/courses">← Все курсы</Link>

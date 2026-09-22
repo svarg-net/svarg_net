@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { getPublicCourse, getPublicLesson, getPublicLessons, getPublicLessonBlocks } from '@/lib/api';
-import BlockRenderer from '@/components/blocks/BlockRenderer';
+import { getPublicCourse, getPublicLesson, getPublicLessons } from '@/lib/api';
+import LessonBlocks from '@/components/courses/LessonBlocks';
 import '@/styles/public/courses.css';
 import { notFound } from 'next/navigation';
 
@@ -15,7 +15,7 @@ export default async function LessonPage({
   const course = await getPublicCourse(slug);
   const lesson = await getPublicLesson(slug, lessonSlug);
   const { items: lessons } = await getPublicLessons(slug);
-  const { items: blocks } = await getPublicLessonBlocks(lesson.id);
+
 
   if (!course || !lesson || course.status !== 'published') {
     notFound();
@@ -38,11 +38,11 @@ export default async function LessonPage({
       <h1>{lesson.title}</h1>
 
       <div className="lesson-content">
-        {blocks.length === 0 ? (
-          <p>Содержимое урока ещё не добавлено.</p>
-        ) : (
-          <BlockRenderer blocks={blocks} />
-        )}
+        <LessonBlocks
+          lessonId={lesson.id}
+          courseSlug={course.slug}
+          minScore={lesson.min_score}
+        />
       </div>
 
       <nav className="lesson-navigation">

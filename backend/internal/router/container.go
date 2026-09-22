@@ -18,18 +18,20 @@ import (
 // container хранит все зависимости приложения
 type container struct {
 	// Handlers
-	postHandler     *handler.PostHandler
-	authHandler     *handler.AuthHandler
-	categoryHandler *handler.CategoryHandler
-	tagHandler      *handler.TagHandler
-	mediaHandler    *handler.MediaHandler
-	searchHandler   *handler.SearchHandler
-	statsHandler    *handler.StatsHandler
-	commentHandler  *handler.CommentHandler
-	blockHandler    *handler.BlockHandler
-	pollHandler     *handler.PollHandler
-	courseHandler   *handler.CourseHandler
-	lessonHandler   *handler.LessonHandler
+	postHandler       *handler.PostHandler
+	authHandler       *handler.AuthHandler
+	categoryHandler   *handler.CategoryHandler
+	tagHandler        *handler.TagHandler
+	mediaHandler      *handler.MediaHandler
+	searchHandler     *handler.SearchHandler
+	statsHandler      *handler.StatsHandler
+	commentHandler    *handler.CommentHandler
+	blockHandler      *handler.BlockHandler
+	pollHandler       *handler.PollHandler
+	courseHandler     *handler.CourseHandler
+	lessonHandler     *handler.LessonHandler
+	enrollmentHandler *handler.EnrollmentHandler
+	progressHandler   *handler.ProgressHandler
 
 	// Services
 	authService service.AuthService
@@ -64,6 +66,8 @@ func newContainer(
 	courseRepo := repository.NewCourseRepository(pool)
 	lessonRepo := repository.NewLessonRepository(pool)
 	lessonBlockRepo := repository.NewLessonBlockRepository(pool)
+	enrollmentRepo := repository.NewEnrollmentRepository(pool)
+	progressRepo := repository.NewProgressRepository(pool)
 
 	// Services
 	postService := service.NewPostService(postRepo, tagRepo, log)
@@ -78,26 +82,30 @@ func newContainer(
 	pollService := service.NewPollService(pollRepo, blockRepo)
 	courseService := service.NewCourseService(courseRepo, log)
 	lessonService := service.NewLessonService(lessonRepo, courseRepo, log)
-	lessonBlockService := service.NewLessonBlockService(lessonBlockRepo, lessonRepo, log)
+	lessonBlockService := service.NewLessonBlockService(lessonBlockRepo, lessonRepo, enrollmentRepo, log)
+	enrollmentService := service.NewEnrollmentService(enrollmentRepo, courseRepo, log)
+	progressService := service.NewProgressService(progressRepo, enrollmentRepo, lessonRepo, courseRepo, log)
 
 	// Handlers
 	return &container{
-		postHandler:     handler.NewPostHandler(postService, categoryService, tagService, log),
-		authHandler:     handler.NewAuthHandler(authService, cfg, log),
-		categoryHandler: handler.NewCategoryHandler(categoryService, log),
-		tagHandler:      handler.NewTagHandler(tagService, log),
-		mediaHandler:    handler.NewMediaHandler(mediaService, log),
-		searchHandler:   handler.NewSearchHandler(searchService, log),
-		statsHandler:    handler.NewStatsHandler(statsService, log),
-		commentHandler:  handler.NewCommentHandler(commentService, log),
-		blockHandler:    handler.NewBlockHandler(blockService, log),
-		pollHandler:     handler.NewPollHandler(pollService, log),
-		courseHandler:   handler.NewCourseHandler(courseService, log),
-		lessonHandler:   handler.NewLessonHandler(lessonService, lessonBlockService, courseService, log),
-		authService:     authService,
-		loginLimiter:    rateLimitMiddleware(newRateLimiterStore(rate.Every(time.Minute), 5)),
-		commentLimiter:  rateLimitMiddleware(newRateLimiterStore(rate.Every(2*time.Minute), 2)),
-		generalLimiter:  rateLimitMiddleware(newRateLimiterStore(rate.Limit(20), 40)),
-		log:             log,
+		postHandler:       handler.NewPostHandler(postService, categoryService, tagService, log),
+		authHandler:       handler.NewAuthHandler(authService, cfg, log),
+		categoryHandler:   handler.NewCategoryHandler(categoryService, log),
+		tagHandler:        handler.NewTagHandler(tagService, log),
+		mediaHandler:      handler.NewMediaHandler(mediaService, log),
+		searchHandler:     handler.NewSearchHandler(searchService, log),
+		statsHandler:      handler.NewStatsHandler(statsService, log),
+		commentHandler:    handler.NewCommentHandler(commentService, log),
+		blockHandler:      handler.NewBlockHandler(blockService, log),
+		pollHandler:       handler.NewPollHandler(pollService, log),
+		courseHandler:     handler.NewCourseHandler(courseService, log),
+		lessonHandler:     handler.NewLessonHandler(lessonService, lessonBlockService, courseService, log),
+		enrollmentHandler: handler.NewEnrollmentHandler(enrollmentService, log),
+		progressHandler:   handler.NewProgressHandler(progressService, log),
+		authService:       authService,
+		loginLimiter:      rateLimitMiddleware(newRateLimiterStore(rate.Every(time.Minute), 5)),
+		commentLimiter:    rateLimitMiddleware(newRateLimiterStore(rate.Every(2*time.Minute), 2)),
+		generalLimiter:    rateLimitMiddleware(newRateLimiterStore(rate.Limit(20), 40)),
+		log:               log,
 	}
 }

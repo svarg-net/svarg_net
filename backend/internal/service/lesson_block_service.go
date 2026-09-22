@@ -11,9 +11,12 @@ import (
 	"svarg_net/internal/repository"
 )
 
+var ErrEnrollmentRequired = errors.New("enrollment required")
+
 // LessonBlockService бизнес-логика блоков уроков
 type LessonBlockService interface {
 	ListPublic(ctx context.Context, lessonID int64) ([]model.Block, error)
+	ListPublicWithAccess(ctx context.Context, lessonID int64, userID int64) ([]model.Block, error)
 	ListForAdmin(ctx context.Context, lessonID int64) ([]model.Block, error)
 	Create(ctx context.Context, data model.BlockCreateData) (*model.Block, error)
 	Update(ctx context.Context, id int64, upd model.BlockUpdateData) (*model.Block, error)
@@ -22,26 +25,33 @@ type LessonBlockService interface {
 }
 
 type lessonBlockService struct {
-	blockRepo  repository.BlockRepository
-	lessonRepo repository.LessonRepository
-	log        logger.Logger
+	blockRepo      repository.BlockRepository
+	lessonRepo     repository.LessonRepository
+	enrollmentRepo repository.EnrollmentRepository
+	log            logger.Logger
 }
 
 // NewLessonBlockService создаёт сервис блоков уроков
 func NewLessonBlockService(
 	blockRepo repository.BlockRepository,
 	lessonRepo repository.LessonRepository,
+	enrollmentRepo repository.EnrollmentRepository,
 	log logger.Logger,
 ) LessonBlockService {
 	return &lessonBlockService{
-		blockRepo:  blockRepo,
-		lessonRepo: lessonRepo,
-		log:        log,
+		blockRepo:      blockRepo,
+		lessonRepo:     lessonRepo,
+		enrollmentRepo: enrollmentRepo,
+		log:            log,
 	}
 }
 
-// ListPublic — блоки урока для публичной страницы (проверка is_free будет в хендлере)
+// ListPublicWithAccess — блоки урока с проверкой доступа (userID=0 → только is_free)
 func (s *lessonBlockService) ListPublic(ctx context.Context, lessonID int64) ([]model.Block, error) {
+	return s.ListPublicWithAccess(ctx, lessonID, 0)
+}
+
+func (s *lessonBlockService) ListPublicWithAccess(ctx context.Context, lessonID int64, userID int64) ([]model.Block, error) {
 	lesson, err := s.lessonRepo.GetByID(ctx, lessonID)
 	if err != nil {
 		return nil, err
@@ -49,7 +59,21 @@ func (s *lessonBlockService) ListPublic(ctx context.Context, lessonID int64) ([]
 	if lesson == nil {
 		return nil, errors.New("lesson not found")
 	}
-	// Проверка доступа (is_free + прогресс) будет на уровне хендлера
+
+	// Если урок платный — проверяем запись
+	if !lesson.IsFree {
+		if userID == 0 {
+			return nil, ErrEnrollmentRequired
+		}
+		enrolled, err := s.enrollmentRepo.IsEnrolled(ctx, userID, lesson.CourseID)
+		if err != nil {
+			return nil, err
+		}
+		if !enrolled {
+			return nil, ErrEnrollmentRequired
+		}
+	}
+
 	return s.blockRepo.ListByPostID(ctx, lessonID)
 }
 

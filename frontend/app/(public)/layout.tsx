@@ -4,6 +4,7 @@ import Sidebar from "@/components/site/Sidebar";
 import "@/styles/sidebar.css";
 import "@/styles/public.css";
 import SearchBar from "@/components/site/SearchBar";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function PublicLayout({
   children,
@@ -16,10 +17,12 @@ export default function PublicLayout({
       <Sidebar />
 
       {/* Main Content */}
-      <main className="main-content">
-        <SearchBar />
-        {children}
-      </main>
+      <AuthProvider>
+        <main className="main-content">
+          <SearchBar />
+          {children}
+        </main>
+      </AuthProvider>
     </div>
   );
 }
