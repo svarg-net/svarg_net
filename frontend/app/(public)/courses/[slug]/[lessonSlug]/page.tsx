@@ -40,6 +40,7 @@ export default async function LessonPage({
       <div className="lesson-content">
         <LessonBlocks
           lessonId={lesson.id}
+          courseId={course.id}
           courseSlug={course.slug}
           minScore={lesson.min_score}
         />

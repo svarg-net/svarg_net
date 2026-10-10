@@ -657,3 +657,57 @@
   font-size: 13px;
   color: #666;
 }
+
+/* === Quiz: состояния сдачи === */
+.block-quiz-submitting {
+  margin-top: 16px;
+  padding: 12px;
+  background: #fef3cd;
+  color: #664d03;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.block-quiz-error {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f8d7da;
+  color: #721c24;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.block-quiz-passed,
+.block-quiz-failed {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.block-quiz-passed {
+  background: #d1fadf;
+  color: #027a48;
+  border: 1px solid #a6f4c5;
+}
+
+.block-quiz-failed {
+  background: #fee4e2;
+  color: #93370d;
+  border: 1px solid #fecdca;
+}
+
+.block-quiz-passed strong,
+.block-quiz-failed strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.block-quiz-passed p,
+.block-quiz-failed p {
+  margin: 0;
+  font-size: 14px;
+}

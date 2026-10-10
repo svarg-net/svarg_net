@@ -1,19 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useLesson } from "@/context/LessonContext";
+import { submitQuiz } from "@/lib/api";
 import type { QuizBlockData } from "@/lib/api/public/blocks";
 
 type Phase = "answering" | "feedback" | "finished";
 
 export default function QuizBlock({ data }: { data: QuizBlockData }) {
-  const questions = data.questions || [];
+  const lesson = useLesson();
+  const questions = useMemo(() => data.questions || [], [data.questions]);
+  const total = questions.length;
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [phase, setPhase] = useState<Phase>("answering");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [passed, setPassed] = useState<boolean | null>(null);
+
+  // Отправка результатов на backend при завершении
+  useEffect(() => {
+    if (phase !== "finished" || !lesson?.lessonId) return;
+
+    const right = questions.reduce(
+      (acc, qq, i) => acc + (answers[i] === (qq.correct_index ?? 0) ? 1 : 0),
+      0
+    );
+    const percent = Math.round((right / total) * 100);
+
+    // Проверка доступа
+    if (!lesson.isAuthenticated) {
+      setSubmitError("Войдите в систему для сдачи теста");
+      return;
+    }
+    if (!lesson.isEnrolled) {
+      setSubmitError("Запишитесь на курс для сдачи теста");
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    submitQuiz(lesson.lessonId, percent)
+      .then((progress) => {
+        setPassed(progress.completed_at !== null);
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Ошибка сохранения";
+        if (msg.includes("enrollment")) {
+          setSubmitError("Запишитесь на курс для сдачи теста");
+        } else {
+          setSubmitError(msg);
+        }
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
+  }, [phase, lesson?.lessonId, lesson?.isAuthenticated, lesson?.isEnrolled, answers, questions, total]);
 
   if (questions.length === 0) return null;
 
-  const total = questions.length;
   const q = questions[idx];
   const correct = q.correct_index ?? 0;
   const answered = answers[idx] !== undefined;
@@ -41,6 +87,8 @@ export default function QuizBlock({ data }: { data: QuizBlockData }) {
     setPhase("answering");
   };
 
+
+
   // Экран результата
   if (phase === "finished") {
     const right = questions.reduce(
@@ -48,6 +96,8 @@ export default function QuizBlock({ data }: { data: QuizBlockData }) {
       0
     );
     const percent = Math.round((right / total) * 100);
+    const minScore = lesson?.minScore ?? 0;
+
     return (
       <div className="block block-quiz block-quiz--finished">
         {data.title && (
@@ -65,6 +115,31 @@ export default function QuizBlock({ data }: { data: QuizBlockData }) {
             />
           </div>
         </div>
+
+        {submitting && (
+          <div className="block-quiz-submitting">Сохранение результата...</div>
+        )}
+
+        {submitError && (
+          <div className="block-quiz-error">{submitError}</div>
+        )}
+
+        {!submitting && !submitError && passed !== null && (
+          <div className={passed ? "block-quiz-passed" : "block-quiz-failed"}>
+            {passed ? (
+              <>
+                <strong>✅ Тест пройден!</strong>
+                <p>Урок засчитан как завершённый.</p>
+              </>
+            ) : (
+              <>
+                <strong>❌ Тест не пройден</strong>
+                <p>Требуется минимум {minScore}% правильных ответов.</p>
+              </>
+            )}
+          </div>
+        )}
+
         <button
           type="button"
           className="block-quiz-reset"

@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getPublicLessonBlocks, markLessonComplete } from '@/lib/api';
+import { getPublicLessonBlocks, markLessonComplete, getEnrollmentStatus } from '@/lib/api';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
 import type { Block } from '@/lib/api/public/blocks';
+import { LessonProvider } from '@/context/LessonContext';
 
 interface Props {
   lessonId: number;
+  courseId: number;
   courseSlug: string;
   minScore: number;
 }
 
-export default function LessonBlocks({ lessonId, courseSlug, minScore }: Props) {
+export default function LessonBlocks({ lessonId, courseId, courseSlug, minScore }: Props) {
   const { user, isLoading } = useAuth();
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +25,16 @@ export default function LessonBlocks({ lessonId, courseSlug, minScore }: Props) 
     const load = async () => {
       setLoading(true);
       setError(null);
+      // Проверяем запись на курс
+      if (user) {
+        try {
+          const er = await getEnrollmentStatus(courseId);
+          setIsEnrolled(er.enrolled);
+        } catch {
+          // не залогинен или ошибка — пропускаем
+        }
+      }
+
       try {
         const res = await getPublicLessonBlocks(lessonId);
         setBlocks(res.items || []);
@@ -48,7 +61,7 @@ export default function LessonBlocks({ lessonId, courseSlug, minScore }: Props) 
     if (!isLoading) {
       load();
     }
-  }, [lessonId, isLoading, user, minScore]);
+  }, [lessonId, courseId, isLoading, user, minScore]);
 
   if (isLoading || loading) {
     return <p>Загрузка содержимого урока...</p>;
@@ -75,5 +88,14 @@ export default function LessonBlocks({ lessonId, courseSlug, minScore }: Props) 
     return <p>Содержимое урока ещё не добавлено.</p>;
   }
 
-  return <BlockRenderer blocks={blocks} />;
+  return (
+    <LessonProvider
+      lessonId={lessonId}
+      minScore={minScore}
+      courseSlug={courseSlug}
+      isEnrolled={isEnrolled}
+    >
+      <BlockRenderer blocks={blocks} />
+    </LessonProvider>
+  );
 }
